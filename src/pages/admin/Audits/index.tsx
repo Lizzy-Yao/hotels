@@ -45,7 +45,7 @@ const AdminAuditsPage: React.FC = () => {
   const columns: ProColumns<Hotel>[] = [
     { title: '酒店名(中文)', dataIndex: 'nameCn' },
     { title: '酒店名(英文)', dataIndex: 'nameEn' },
-    { title: '商户', dataIndex: 'owner', width: 120 },
+    { title: '用户', dataIndex: 'owner', width: 120 },
     { title: '星级', dataIndex: 'star', width: 80 },
     { title: '开业时间', dataIndex: 'openingDate', width: 120 },
     {
@@ -174,7 +174,7 @@ const AdminAuditsPage: React.FC = () => {
               column={2}
               dataSource={current}
               columns={[
-                { title: '商户', dataIndex: 'owner' },
+                { title: '用户', dataIndex: 'owner' },
                 { title: '酒店名(中文)', dataIndex: 'nameCn' },
                 { title: '酒店名(英文)', dataIndex: 'nameEn' },
                 { title: '地址', dataIndex: 'address', span: 2 },

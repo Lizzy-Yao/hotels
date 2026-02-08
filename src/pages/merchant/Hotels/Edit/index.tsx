@@ -72,12 +72,12 @@ const HotelEditPage: React.FC = () => {
     const h = getHotel(id);
     if (!h) {
       message.error('酒店不存在');
-      history.push('/merchant/hotels');
+      history.push('/user-center/hotels');
       return;
     }
     if (owner && h.owner !== owner) {
       message.error('无权限');
-      history.push('/merchant/hotels');
+      history.push('/user-center/hotels');
     }
   }, [id, owner]);
 
@@ -108,7 +108,7 @@ const HotelEditPage: React.FC = () => {
         message.success('已提交审核');
       }
 
-      history.push('/merchant/hotels');
+      history.push('/user-center/hotels');
     } catch (e: any) {
       message.error(e?.message || '保存失败');
     } finally {
@@ -121,7 +121,10 @@ const HotelEditPage: React.FC = () => {
       header={{
         title: id ? '编辑酒店' : '新建酒店',
         extra: [
-          <Button key="back" onClick={() => history.push('/merchant/hotels')}>
+          <Button
+            key="back"
+            onClick={() => history.push('/user-center/hotels')}
+          >
             返回
           </Button>,
         ],

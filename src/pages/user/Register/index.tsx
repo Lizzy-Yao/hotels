@@ -1,4 +1,4 @@
-import { login, registerMerchant, seedAdminUser } from '@/services/localAuth';
+import { login, registerUser, seedDefaultUsers } from '@/services/localAuth';
 import { history, useModel } from '@umijs/max';
 import { Button, Card, Form, Input, message } from 'antd';
 import React from 'react';
@@ -17,19 +17,20 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      seedAdminUser();
-      registerMerchant({
+      seedDefaultUsers();
+      registerUser({
         username: values.username,
         password: values.password,
       });
       const currentUser = login({
         username: values.username,
         password: values.password,
+        role: 'user',
       });
       await setInitialState?.({ ...initialState, currentUser });
 
       message.success('注册成功');
-      history.push('/merchant/hotels');
+      history.push('/');
     } catch (e: any) {
       message.error(e?.message || '注册失败');
     }
@@ -37,7 +38,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh', display: 'grid', placeItems: 'center' }}>
-      <Card title="注册（商户）" style={{ width: 360 }}>
+      <Card title="注册（用户）" style={{ width: 360 }}>
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
             label="用户名"

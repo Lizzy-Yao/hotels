@@ -12,7 +12,10 @@ export default defineConfig({
   routes: [
     {
       path: '/',
-      redirect: '/user/login',
+      name: '首页',
+      icon: 'HomeOutlined',
+      component: './Home',
+      access: 'isLoggedIn',
     },
     {
       path: '/user',
@@ -24,29 +27,29 @@ export default defineConfig({
     },
 
     {
-      path: '/merchant',
-      name: '商户中心',
+      path: '/user-center',
+      name: '用户中心',
       icon: 'ShopOutlined',
-      access: 'canAccessMerchant',
+      access: 'canAccessUser',
       routes: [
         {
-          path: '/merchant/hotels',
+          path: '/user-center/hotels',
           name: '酒店信息',
           icon: 'HomeOutlined',
           component: './merchant/Hotels',
-          access: 'canAccessMerchant',
+          access: 'canAccessUser',
         },
         {
-          path: '/merchant/hotels/new',
+          path: '/user-center/hotels/new',
           component: './merchant/Hotels/Edit',
           hideInMenu: true,
-          access: 'canAccessMerchant',
+          access: 'canAccessUser',
         },
         {
-          path: '/merchant/hotels/edit/:id',
+          path: '/user-center/hotels/edit/:id',
           component: './merchant/Hotels/Edit',
           hideInMenu: true,
-          access: 'canAccessMerchant',
+          access: 'canAccessUser',
         },
       ],
     },
@@ -64,13 +67,15 @@ export default defineConfig({
           component: './admin/Audits',
           access: 'canAccessAdmin',
         },
+        {
+          path: '/admin/hotels',
+          name: '酒店管理',
+          icon: 'ApartmentOutlined',
+          component: './admin/Hotels',
+          access: 'canAccessAdmin',
+        },
       ],
     },
-
-    // 保留脚手架示例页（不走权限限制）
-    { name: '首页(示例)', path: '/home', component: './Home' },
-    { name: '权限演示(示例)', path: '/access', component: './Access' },
-    { name: 'CRUD 示例(示例)', path: '/table', component: './Table' },
   ],
   npmClient: 'pnpm',
 });

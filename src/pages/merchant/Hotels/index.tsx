@@ -29,7 +29,7 @@ function statusTag(status: Hotel['status']) {
   }
 }
 
-const MerchantHotelsPage: React.FC = () => {
+const UserHotelsPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const { initialState } = useModel('@@initialState');
   const owner = initialState?.currentUser?.username;
@@ -75,7 +75,7 @@ const MerchantHotelsPage: React.FC = () => {
             </a>
             <a
               onClick={() => {
-                history.push(`/merchant/hotels/edit/${record.id}`);
+                history.push(`/user-center/hotels/edit/${record.id}`);
               }}
               style={{
                 pointerEvents: canEdit ? 'auto' : 'none',
@@ -110,12 +110,12 @@ const MerchantHotelsPage: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '酒店信息（商户）',
+        title: '酒店信息（用户）',
         extra: [
           <Button
             key="new"
             type="primary"
-            onClick={() => history.push('/merchant/hotels/new')}
+            onClick={() => history.push('/user-center/hotels/new')}
           >
             新建酒店
           </Button>,
@@ -173,4 +173,4 @@ const MerchantHotelsPage: React.FC = () => {
   );
 };
 
-export default MerchantHotelsPage;
+export default UserHotelsPage;
