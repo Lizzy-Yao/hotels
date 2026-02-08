@@ -1,3 +1,7 @@
-# README
+# README 酒店管理系统 web 端
 
-`@umijs/max` 模板项目，更多功能参考 [Umi Max 简介](https://umijs.org/docs/max/introduce)
+## 启动教程
+
+1. 安装 Node.js、pnpm
+2. pnpm install
+3. pnpm dev
