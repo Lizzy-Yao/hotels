@@ -107,6 +107,17 @@ const UserHotelsPage: React.FC = () => {
     },
   ];
 
+  const renderDiscount = (discount: any) => {
+    if (discount.type === 'discount') {
+      return `${discount.name}: 打 ${discount.value * 10} 折 (${
+        discount.description || ''
+      })`;
+    }
+    return `${discount.name}: 立减 ${discount.value} 元 (${
+      discount.description || ''
+    })`;
+  };
+
   return (
     <PageContainer
       header={{
@@ -155,6 +166,63 @@ const UserHotelsPage: React.FC = () => {
                 { title: '地址', dataIndex: 'address' },
                 { title: '星级', dataIndex: 'star' },
                 { title: '开业时间', dataIndex: 'openingDate' },
+
+                // --- 新增维度展示 ---
+                {
+                  title: '交通信息',
+                  dataIndex: 'transportation',
+                  span: 2, // 占满一行
+                  render: (dom) => dom || '暂无数据',
+                },
+                {
+                  title: '周边景点',
+                  dataIndex: 'nearbyAttractions',
+                  span: 2,
+                  render: (_, r) => (
+                    <Space size={4} wrap>
+                      {r.nearbyAttractions?.length
+                        ? r.nearbyAttractions.map((tag) => (
+                            <Tag key={tag} color="blue">
+                              {tag}
+                            </Tag>
+                          ))
+                        : '暂无数据'}
+                    </Space>
+                  ),
+                },
+                {
+                  title: '周边商场',
+                  dataIndex: 'nearbyMalls',
+                  span: 2,
+                  render: (_, r) => (
+                    <Space size={4} wrap>
+                      {r.nearbyMalls?.length
+                        ? r.nearbyMalls.map((tag) => (
+                            <Tag key={tag} color="cyan">
+                              {tag}
+                            </Tag>
+                          ))
+                        : '暂无数据'}
+                    </Space>
+                  ),
+                },
+                {
+                  title: '优惠活动',
+                  dataIndex: 'discounts',
+                  span: 2,
+                  render: (_, r) =>
+                    r.discounts?.length ? (
+                      <ul style={{ paddingLeft: 20, margin: 0 }}>
+                        {r.discounts.map((d, i) => (
+                          <li key={i}>{renderDiscount(d)}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      '暂无优惠'
+                    ),
+                },
+                // ------------------
+
                 {
                   title: '房型/价格',
                   dataIndex: 'roomTypes',

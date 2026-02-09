@@ -1,225 +1,220 @@
-import { getHotel, submitHotel, upsertHotel } from '@/services/localHotels';
+import { getHotel, upsertHotel, type Hotel } from '@/services/localHotels';
 import {
   PageContainer,
   ProForm,
   ProFormDatePicker,
   ProFormDigit,
   ProFormList,
+  ProFormSelect,
   ProFormText,
+  ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history, useModel, useParams } from '@umijs/max';
-import { Button, Card, Space, Tag, message } from 'antd';
-import dayjs from 'dayjs';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Card, message } from 'antd';
+import { useEffect, useState } from 'react';
 
-type Params = { id?: string };
-
-const HotelEditPage: React.FC = () => {
-  const params = useParams<Params>();
-  const id = params?.id;
-
+export default function HotelEditPage() {
+  const { id } = useParams();
+  const isEdit = !!id;
   const { initialState } = useModel('@@initialState');
-  const owner = initialState?.currentUser?.username;
-
-  const [loading, setLoading] = useState(false);
-  const [hotelStatus, setHotelStatus] = useState<string>('draft');
-  const [hotelNote, setHotelNote] = useState<string | undefined>(undefined);
-
-  const initialValues = useMemo(() => {
-    if (!id) {
-      return {
-        nameCn: '',
-        nameEn: '',
-        address: '',
-        star: 5,
-        openingDate: dayjs(),
-        roomTypes: [{ name: '标准间', price: 399 }],
-      };
-    }
-
-    const h = getHotel(id);
-    if (!h) return undefined;
-
-    return {
-      nameCn: h.nameCn,
-      nameEn: h.nameEn,
-      address: h.address,
-      star: h.star,
-      openingDate: dayjs(h.openingDate),
-      roomTypes: h.roomTypes,
-    };
-  }, [id]);
+  const [initialValues, setInitialValues] = useState<Partial<Hotel>>({});
+  const [form] = ProForm.useForm();
 
   useEffect(() => {
-    if (!id) {
-      setHotelStatus('draft');
-      setHotelNote(undefined);
-      return;
-    }
-    const h = getHotel(id);
-    if (!h) return;
-    setHotelStatus(h.status);
-    setHotelNote(h.auditNote);
-  }, [id]);
-
-  useEffect(() => {
-    if (!owner) {
-      message.error('请先登录');
-      history.push('/user/login');
-      return;
-    }
-    if (!id) return;
-    const h = getHotel(id);
-    if (!h) {
-      message.error('酒店不存在');
-      history.push('/user-center/hotels');
-      return;
-    }
-    if (owner && h.owner !== owner) {
-      message.error('无权限');
-      history.push('/user-center/hotels');
-    }
-  }, [id, owner]);
-
-  const onSave = async (values: any, submitAfterSave: boolean) => {
-    try {
-      setLoading(true);
-      const openingDate = values.openingDate?.format?.('YYYY-MM-DD') || '';
-      const roomTypes = (values.roomTypes || []).map((x: any) => ({
-        name: String(x?.name || '').trim(),
-        price: Number(x?.price || 0),
-      }));
-
-      const saved = upsertHotel({
-        id,
-        owner: owner || '',
-        nameCn: String(values.nameCn || '').trim(),
-        nameEn: String(values.nameEn || '').trim(),
-        address: String(values.address || '').trim(),
-        star: Number(values.star),
-        roomTypes,
-        openingDate,
-      });
-
-      message.success('保存成功');
-
-      if (submitAfterSave) {
-        submitHotel({ id: saved.id, owner: owner || '' });
-        message.success('已提交审核');
+    if (isEdit && id) {
+      const data = getHotel(id);
+      if (data) {
+        setInitialValues(data);
+        form.setFieldsValue(data); // 关键：回填数据
+      } else {
+        message.error('未找到该酒店');
+        history.push('/user-center/hotels');
       }
+    }
+  }, [id, isEdit, form]);
 
+  const handleFinish = async (values: any) => {
+    try {
+      upsertHotel({
+        ...values,
+        id: isEdit ? id : undefined,
+        owner: initialState?.currentUser?.username || '',
+      });
+      message.success('保存成功');
       history.push('/user-center/hotels');
     } catch (e: any) {
-      message.error(e?.message || '保存失败');
-    } finally {
-      setLoading(false);
+      message.error(e.message);
     }
   };
 
   return (
-    <PageContainer
-      header={{
-        title: id ? '编辑酒店' : '新建酒店',
-        extra: [
-          <Button
-            key="back"
-            onClick={() => history.push('/user-center/hotels')}
-          >
-            返回
-          </Button>,
-        ],
-      }}
-    >
+    <PageContainer title={isEdit ? '编辑酒店' : '新建酒店'}>
       <Card>
-        <Space style={{ marginBottom: 12 }}>
-          <Tag>{`当前状态：${hotelStatus}`}</Tag>
-          {hotelNote ? (
-            <Tag color="error">{`审核意见：${hotelNote}`}</Tag>
-          ) : null}
-        </Space>
-
         <ProForm
-          submitter={{
-            render: (_, dom) => (
-              <Space>
-                <Button
-                  type="primary"
-                  loading={loading}
-                  onClick={() => _.form?.submit?.()}
-                >
-                  保存草稿
-                </Button>
-                <Button
-                  loading={loading}
-                  onClick={async () => {
-                    const values = await _.form?.validateFields?.();
-                    await onSave(values, true);
-                  }}
-                >
-                  保存并提交审核
-                </Button>
-                {dom?.[1]}
-              </Space>
-            ),
-          }}
+          form={form}
           initialValues={initialValues}
-          onFinish={async (values) => {
-            await onSave(values, false);
-            return true;
-          }}
+          onFinish={handleFinish}
+          layout="vertical"
         >
-          <ProFormText
-            name="nameCn"
-            label="酒店名（中文）"
-            rules={[{ required: true, message: '必填' }]}
-          />
-          <ProFormText
-            name="nameEn"
-            label="酒店名（英文）"
-            rules={[{ required: true, message: '必填' }]}
-          />
-          <ProFormText
-            name="address"
-            label="酒店地址"
-            rules={[{ required: true, message: '必填' }]}
-          />
-          <ProFormDigit
-            name="star"
-            label="酒店星级"
-            min={1}
-            max={5}
-            fieldProps={{ precision: 0 }}
-            rules={[{ required: true, message: '必填' }]}
-          />
-          <ProFormDatePicker
-            name="openingDate"
-            label="酒店开业时间"
-            rules={[{ required: true, message: '必填' }]}
-          />
-
-          <ProFormList
-            name="roomTypes"
-            label="酒店房型/价格"
-            creatorButtonProps={{ creatorButtonText: '新增房型' }}
-            min={1}
-          >
+          {/* --- 必填基础信息 --- */}
+          <ProForm.Group title="基础信息">
             <ProFormText
-              name="name"
-              label="房型"
-              rules={[{ required: true, message: '必填' }]}
+              name="nameCn"
+              label="酒店名(中文)"
+              placeholder="请输入中文名称"
+              rules={[{ required: true }]}
+              width="md"
             />
+            <ProFormText
+              name="nameEn"
+              label="酒店名(英文)"
+              placeholder="请输入英文名称"
+              rules={[{ required: true }]}
+              width="md"
+            />
+            <ProFormText
+              name="address"
+              label="地址"
+              placeholder="请输入详细地址"
+              rules={[{ required: true }]}
+              width="xl"
+            />
+          </ProForm.Group>
+
+          <ProForm.Group>
             <ProFormDigit
-              name="price"
-              label="价格（元）"
-              min={0}
-              fieldProps={{ precision: 2 }}
-              rules={[{ required: true, message: '必填' }]}
+              name="star"
+              label="星级"
+              min={1}
+              max={5}
+              rules={[{ required: true }]}
+              width="xs"
             />
-          </ProFormList>
+            <ProFormDatePicker
+              name="openingDate"
+              label="开业时间"
+              rules={[{ required: true }]}
+              width="md"
+            />
+          </ProForm.Group>
+
+          {/* --- 新增：可选维度信息 --- */}
+          <ProForm.Group title="周边与交通（选填）">
+            <ProFormSelect
+              name="nearbyAttractions"
+              label="周边热门景点"
+              mode="tags"
+              placeholder="输入景点后回车，可输入多个"
+              width="lg"
+              fieldProps={{ tokenSeparators: [',', '，'] }}
+            />
+            <ProFormSelect
+              name="nearbyMalls"
+              label="周边商场"
+              mode="tags"
+              placeholder="输入商场后回车，可输入多个"
+              width="lg"
+              fieldProps={{ tokenSeparators: [',', '，'] }}
+            />
+            <ProFormTextArea
+              name="transportation"
+              label="交通信息"
+              placeholder="例如：距离地铁站500米，有机场大巴直达"
+              width="xl"
+            />
+          </ProForm.Group>
+
+          {/* --- 新增：优惠活动 --- */}
+          <ProForm.Group title="营销与优惠（选填）" style={{ width: '100%' }}>
+            <ProFormList
+              name="discounts"
+              label="优惠活动配置"
+              creatorButtonProps={{
+                position: 'bottom',
+                creatorButtonText: '新增优惠活动',
+              }}
+              itemRender={({ listDom, action }, { index }) => (
+                <Card
+                  bordered
+                  style={{ marginBottom: 8 }}
+                  size="small"
+                  extra={action}
+                  title={`优惠活动 ${index + 1}`}
+                >
+                  {listDom}
+                </Card>
+              )}
+            >
+              <ProForm.Group>
+                <ProFormText
+                  name="name"
+                  label="活动名称"
+                  placeholder="如：节日特惠"
+                  rules={[{ required: true }]}
+                  width="sm"
+                />
+                <ProFormSelect
+                  name="type"
+                  label="类型"
+                  valueEnum={{
+                    discount: '打折',
+                    reduction: '满减/直减',
+                  }}
+                  rules={[{ required: true }]}
+                  width="xs"
+                />
+                <ProFormDigit
+                  name="value"
+                  label="数值"
+                  placeholder="0.8或200"
+                  rules={[{ required: true }]}
+                  width="xs"
+                  fieldProps={{ precision: 2 }}
+                />
+                <ProFormText
+                  name="description"
+                  label="详细描述"
+                  placeholder="活动规则描述"
+                  width="md"
+                />
+              </ProForm.Group>
+            </ProFormList>
+          </ProForm.Group>
+          {/* --------------------------- */}
+
+          <ProForm.Group title="房型设置">
+            <ProFormList
+              name="roomTypes"
+              label="房型列表"
+              rules={[
+                {
+                  validator: async (_, value) => {
+                    if (!value || value.length < 1) {
+                      throw new Error('至少需要填写一个房型');
+                    }
+                  },
+                },
+              ]}
+              creatorButtonProps={{
+                creatorButtonText: '添加新房型',
+              }}
+            >
+              <ProForm.Group>
+                <ProFormText
+                  name="name"
+                  label="房型名称"
+                  rules={[{ required: true }]}
+                />
+                <ProFormDigit
+                  name="price"
+                  label="价格(元)"
+                  rules={[{ required: true }]}
+                />
+              </ProForm.Group>
+            </ProFormList>
+          </ProForm.Group>
         </ProForm>
       </Card>
     </PageContainer>
   );
-};
-
-export default HotelEditPage;
+}

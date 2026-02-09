@@ -11,6 +11,14 @@ export type HotelStatus =
 
 export type RoomType = { name: string; price: number };
 
+export type DiscountScenario = {
+  id: string;
+  name: string; // 例如 "节日特惠", "机酒套餐"
+  type: 'discount' | 'reduction'; // discount=打折, reduction=满减/直减
+  value: number; // 例如 0.8 (8折) 或 200 (减200元)
+  description?: string; // 详细描述
+};
+
 export type Hotel = {
   id: string;
   owner: string;
@@ -19,8 +27,15 @@ export type Hotel = {
   address: string;
   star: number;
   roomTypes: RoomType[];
-  openingDate: string; // YYYY-MM-DD
+  openingDate: string;
   status: HotelStatus;
+
+  // --- 可选维度 ---
+  nearbyAttractions?: string[]; // 热门景点 (数组存储)
+  transportation?: string; // 交通情况 (文本描述)
+  nearbyMalls?: string[]; // 周边商场 (数组存储)
+  discounts?: DiscountScenario[]; // 优惠场景列表
+
   auditNote?: string;
   createdAt: string;
   updatedAt: string;
@@ -54,9 +69,31 @@ export function upsertHotel(input: {
   star: number;
   roomTypes: RoomType[];
   openingDate: string;
+  // 新增入参
+  nearbyAttractions?: string[];
+  transportation?: string;
+  nearbyMalls?: string[];
+  discounts?: DiscountScenario[];
 }) {
   const hotels = getHotels();
   const now = nowISO();
+
+  // 辅助函数：构建更新对象，将新字段合并进去
+  const mergeHotelData = (prev: Hotel): Hotel => ({
+    ...prev,
+    nameCn: input.nameCn,
+    nameEn: input.nameEn,
+    address: input.address,
+    star: input.star,
+    roomTypes: input.roomTypes,
+    openingDate: input.openingDate,
+    // 合并新字段
+    nearbyAttractions: input.nearbyAttractions,
+    transportation: input.transportation,
+    nearbyMalls: input.nearbyMalls,
+    discounts: input.discounts,
+    updatedAt: now,
+  });
 
   if (input.id) {
     const idx = hotels.findIndex((h) => h.id === input.id);
@@ -64,7 +101,6 @@ export function upsertHotel(input: {
     if (hotels[idx].owner !== input.owner) throw new Error('无权限');
 
     const prev = hotels[idx];
-    // 已提交/已发布默认不允许商户改（简化逻辑）
     if (
       prev.status === 'submitted' ||
       prev.status === 'published' ||
@@ -73,29 +109,28 @@ export function upsertHotel(input: {
       throw new Error('当前状态不可编辑');
     }
 
-    hotels[idx] = {
-      ...prev,
-      nameCn: input.nameCn,
-      nameEn: input.nameEn,
-      address: input.address,
-      star: input.star,
-      roomTypes: input.roomTypes,
-      openingDate: input.openingDate,
-      updatedAt: now,
-    };
+    hotels[idx] = mergeHotelData(prev); // 使用辅助函数更新
     setHotels(hotels);
     return hotels[idx];
   }
 
+  // 新建逻辑
   const hotel: Hotel = {
     id: createId('hotel'),
     owner: input.owner,
+    // 必填项
     nameCn: input.nameCn,
     nameEn: input.nameEn,
     address: input.address,
     star: input.star,
     roomTypes: input.roomTypes,
     openingDate: input.openingDate,
+    // 可选项 (如果有传则存，没传则为 undefined)
+    nearbyAttractions: input.nearbyAttractions,
+    transportation: input.transportation,
+    nearbyMalls: input.nearbyMalls,
+    discounts: input.discounts,
+
     status: 'draft',
     createdAt: now,
     updatedAt: now,
