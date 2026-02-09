@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  MERCHANT
+  ADMIN
+}
+
+enum HotelStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PUBLISHED
+  OFFLINE
+}
+
+enum NearbyType {
+  ATTRACTION
+  TRANSPORT
+  MALL
+}
+
+enum PromotionType {
+  PERCENT_OFF
+  PACKAGE_MINUS
+}
+
+enum AuditAction {
+  SUBMIT
+  APPROVE
+  REJECT
+  PUBLISH
+  OFFLINE
+  RESTORE
+  UPDATE
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  role          UserRole
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hotels        Hotel[]
+  auditLogs     HotelAuditLog[] @relation("operatorLogs")
+}
+
+model Hotel {
+  id               String      @id @default(cuid())
+  merchantId       String
+  merchant         User        @relation(fields: [merchantId], references: [id])
+
+  nameCn           String
+  nameEn           String? 
+  address          String
+  starRating       Int
+  openDate         DateTime?
+
+  status           HotelStatus @default(DRAFT)
+  rejectReason     String?
+  publishedAt      DateTime?
+  offlineAt        DateTime?
+  offlineFromStatus HotelStatus?
+
+  minPriceCents    Int?
+  maxPriceCents    Int?
+  currency         String?     @default("CNY")
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  roomTypes        RoomType[]
+  nearbyPlaces     NearbyPlace[]
+  promotions       Promotion[]
+  auditLogs        HotelAuditLog[]
+}
+
+model RoomType {
+  id             String   @id @default(cuid())
+  hotelId        String
+  hotel          Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  name           String
+  bedType        String?
+  capacity       Int?
+  areaSqm        Float?
+  basePriceCents Int
+  currency       String   @default("CNY")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([hotelId])
+}
+
+model NearbyPlace {
+  id            String     @id @default(cuid())
+  hotelId       String
+  hotel         Hotel      @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  type          NearbyType
+  name          String
+  distanceMeters Int?
+  address       String?
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([hotelId, type])
+}
+
+model Promotion {
+  id             String        @id @default(cuid())
+  hotelId        String
+  hotel          Hotel         @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  type           PromotionType
+  title          String
+  description    String?
+  startDate      DateTime?
+  endDate        DateTime?
+
+  percentOff     Int?
+  amountOffCents Int?
+  conditionsJson Json?
+  isActive       Boolean       @default(true)
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([hotelId, isActive])
+}
+
+model HotelAuditLog {
+  id          String      @id @default(cuid())
+  hotelId     String
+  hotel       Hotel       @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  operatorId  String
+  operator    User        @relation("operatorLogs", fields: [operatorId], references: [id])
+
+  action      AuditAction
+  note        String?
+  createdAt   DateTime    @default(now())
+
+  @@index([hotelId, createdAt])
+}
