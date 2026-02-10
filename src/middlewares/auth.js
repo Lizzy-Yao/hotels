@@ -15,7 +15,7 @@ function authRequired(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET || "dev_secret");
-    req.user = payload; // { id, role, email }
+    req.user = payload; // { id, role, username }
     next();
   } catch (e) {
     return res.status(401).json({ message: "token 无效或已过期" });

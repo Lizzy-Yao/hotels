@@ -24,7 +24,7 @@ router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next
         orderBy: { updatedAt: "desc" },
         skip: (p - 1) * ps,
         take: ps,
-        include: { merchant: { select: { id: true, email: true } } }
+        include: { merchant: { select: { id: true, username: true } } }
       })
     ]);
 
