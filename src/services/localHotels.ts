@@ -1,5 +1,4 @@
-import { STORAGE_KEYS } from '@/constants/storageKeys';
-import { createId, nowISO, readJSON, writeJSON } from '@/utils/storage';
+import { request } from '@umijs/max';
 
 export type HotelStatus =
   | 'draft'
@@ -13,10 +12,10 @@ export type RoomType = { name: string; price: number };
 
 export type DiscountScenario = {
   id: string;
-  name: string; // 例如 "节日特惠", "机酒套餐"
-  type: 'discount' | 'reduction'; // discount=打折, reduction=满减/直减
-  value: number; // 例如 0.8 (8折) 或 200 (减200元)
-  description?: string; // 详细描述
+  name: string;
+  type: 'discount' | 'reduction';
+  value: number;
+  description?: string;
 };
 
 export type Hotel = {
@@ -29,38 +28,155 @@ export type Hotel = {
   roomTypes: RoomType[];
   openingDate: string;
   status: HotelStatus;
-
-  // --- 可选维度 ---
-  nearbyAttractions?: string[]; // 热门景点 (数组存储)
-  transportation?: string; // 交通情况 (文本描述)
-  nearbyMalls?: string[]; // 周边商场 (数组存储)
-  discounts?: DiscountScenario[]; // 优惠场景列表
-
+  nearbyAttractions?: string[];
+  transportation?: string;
+  nearbyMalls?: string[];
+  discounts?: DiscountScenario[];
   auditNote?: string;
   createdAt: string;
   updatedAt: string;
 };
 
-function getHotels(): Hotel[] {
-  return readJSON<Hotel[]>(STORAGE_KEYS.hotels, []);
+type AnyObject = Record<string, any>;
+
+function parseError(error: any, fallback: string) {
+  const message =
+    error?.info?.errorMessage ||
+    error?.data?.message ||
+    error?.response?.data?.message ||
+    error?.message;
+  return new Error(message || fallback);
 }
 
-function setHotels(hotels: Hotel[]) {
-  writeJSON(STORAGE_KEYS.hotels, hotels);
+function extractData<T = AnyObject>(payload: any): T {
+  if (!payload || typeof payload !== 'object') return payload as T;
+  return (payload.data ?? payload.result ?? payload.payload ?? payload) as T;
 }
 
-export function listHotels(params?: { owner?: string }) {
-  const hotels = getHotels();
-  if (!params?.owner) return hotels;
-  return hotels.filter((h) => h.owner === params.owner);
+function normalizeStatus(value: any): HotelStatus {
+  const status = String(value || '').toLowerCase();
+  if (status === 'draft') return 'draft';
+  if (status === 'submitted' || status === 'pending') return 'submitted';
+  if (status === 'approved' || status === 'pass') return 'approved';
+  if (status === 'rejected' || status === 'reject') return 'rejected';
+  if (status === 'published' || status === 'online') return 'published';
+  if (status === 'offline') return 'offline';
+  return 'draft';
 }
 
-export function getHotel(id: string) {
-  const hotels = getHotels();
-  return hotels.find((h) => h.id === id) || null;
+function normalizeRoomTypes(value: any): RoomType[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => ({
+      name: item?.name || item?.room_name || '',
+      price: Number(item?.price ?? item?.amount ?? 0),
+    }))
+    .filter((item) => item.name);
 }
 
-export function upsertHotel(input: {
+function normalizeDiscounts(value: any): DiscountScenario[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.map((item, index) => ({
+    id: String(item?.id || `discount_${index}`),
+    name: item?.name || '',
+    type: item?.type === 'reduction' ? 'reduction' : 'discount',
+    value: Number(item?.value ?? 0),
+    description: item?.description || '',
+  }));
+}
+
+function normalizeHotel(raw: AnyObject): Hotel {
+  return {
+    id: String(raw?.id || raw?._id || ''),
+    owner: String(raw?.owner || raw?.merchant_id || raw?.merchantId || ''),
+    nameCn: String(raw?.nameCn || raw?.name_cn || raw?.name || ''),
+    nameEn: String(raw?.nameEn || raw?.name_en || ''),
+    address: String(raw?.address || ''),
+    star: Number(raw?.star ?? 0),
+    roomTypes: normalizeRoomTypes(raw?.roomTypes || raw?.room_types),
+    openingDate: String(raw?.openingDate || raw?.opening_date || ''),
+    status: normalizeStatus(raw?.status),
+    nearbyAttractions:
+      raw?.nearbyAttractions || raw?.nearby_attractions || undefined,
+    transportation: raw?.transportation || undefined,
+    nearbyMalls: raw?.nearbyMalls || raw?.nearby_malls || undefined,
+    discounts: normalizeDiscounts(raw?.discounts),
+    auditNote: raw?.auditNote || raw?.audit_note || undefined,
+    createdAt: String(raw?.createdAt || raw?.created_at || ''),
+    updatedAt: String(raw?.updatedAt || raw?.updated_at || ''),
+  };
+}
+
+function getListAndTotal(payload: any): { list: Hotel[]; total: number } {
+  const data = extractData(payload);
+  const listSource =
+    data?.list ||
+    data?.items ||
+    data?.records ||
+    data?.rows ||
+    (Array.isArray(data) ? data : []);
+  const list = Array.isArray(listSource)
+    ? listSource.map((item) => normalizeHotel(item || {}))
+    : [];
+  const total = Number(data?.total ?? data?.count ?? list.length ?? 0);
+  return { list, total };
+}
+
+export async function listHotels(params?: {
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  try {
+    const response = await request('/api/v1/hotels/', {
+      method: 'GET',
+      params: {
+        status: params?.status,
+        page: params?.page,
+        pageSize: params?.pageSize,
+      },
+    });
+    return getListAndTotal(response);
+  } catch (error) {
+    throw parseError(error, '获取酒店列表失败');
+  }
+}
+
+export async function listAdminHotels(params?: {
+  status?: string;
+  merchantId?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  try {
+    const response = await request('/api/v1/admin/hotels', {
+      method: 'GET',
+      params: {
+        status: params?.status,
+        merchant_id: params?.merchantId,
+        page: params?.page,
+        pageSize: params?.pageSize,
+      },
+    });
+    return getListAndTotal(response);
+  } catch (error) {
+    throw parseError(error, '获取管理列表失败');
+  }
+}
+
+export async function getHotel(id: string) {
+  try {
+    const response = await request(`/api/v1/hotels/${id}`, {
+      method: 'GET',
+    });
+    const data = extractData<AnyObject>(response);
+    return normalizeHotel(data || {});
+  } catch (error) {
+    throw parseError(error, '获取酒店详情失败');
+  }
+}
+
+export async function upsertHotel(input: {
   id?: string;
   owner: string;
   nameCn: string;
@@ -69,157 +185,115 @@ export function upsertHotel(input: {
   star: number;
   roomTypes: RoomType[];
   openingDate: string;
-  // 新增入参
   nearbyAttractions?: string[];
   transportation?: string;
   nearbyMalls?: string[];
   discounts?: DiscountScenario[];
 }) {
-  const hotels = getHotels();
-  const now = nowISO();
-
-  // 辅助函数：构建更新对象，将新字段合并进去
-  const mergeHotelData = (prev: Hotel): Hotel => ({
-    ...prev,
-    nameCn: input.nameCn,
-    nameEn: input.nameEn,
-    address: input.address,
-    star: input.star,
-    roomTypes: input.roomTypes,
-    openingDate: input.openingDate,
-    // 合并新字段
-    nearbyAttractions: input.nearbyAttractions,
-    transportation: input.transportation,
-    nearbyMalls: input.nearbyMalls,
-    discounts: input.discounts,
-    updatedAt: now,
-  });
-
-  if (input.id) {
-    const idx = hotels.findIndex((h) => h.id === input.id);
-    if (idx < 0) throw new Error('酒店不存在');
-    if (hotels[idx].owner !== input.owner) throw new Error('无权限');
-
-    const prev = hotels[idx];
-    if (
-      prev.status === 'submitted' ||
-      prev.status === 'published' ||
-      prev.status === 'approved'
-    ) {
-      throw new Error('当前状态不可编辑');
-    }
-
-    hotels[idx] = mergeHotelData(prev); // 使用辅助函数更新
-    setHotels(hotels);
-    return hotels[idx];
-  }
-
-  // 新建逻辑
-  const hotel: Hotel = {
-    id: createId('hotel'),
+  const data = {
     owner: input.owner,
-    // 必填项
     nameCn: input.nameCn,
     nameEn: input.nameEn,
     address: input.address,
     star: input.star,
     roomTypes: input.roomTypes,
     openingDate: input.openingDate,
-    // 可选项 (如果有传则存，没传则为 undefined)
     nearbyAttractions: input.nearbyAttractions,
     transportation: input.transportation,
     nearbyMalls: input.nearbyMalls,
     discounts: input.discounts,
-
-    status: 'draft',
-    createdAt: now,
-    updatedAt: now,
   };
-  hotels.unshift(hotel);
-  setHotels(hotels);
-  return hotel;
-}
 
-export function submitHotel(params: { id: string; owner: string }) {
-  const hotels = getHotels();
-  const idx = hotels.findIndex((h) => h.id === params.id);
-  if (idx < 0) throw new Error('酒店不存在');
-  if (hotels[idx].owner !== params.owner) throw new Error('无权限');
-  if (
-    hotels[idx].status !== 'draft' &&
-    hotels[idx].status !== 'rejected' &&
-    hotels[idx].status !== 'offline'
-  ) {
-    throw new Error('当前状态不可提交');
+  try {
+    const response = input.id
+      ? await request(`/api/v1/hotels/${input.id}`, {
+          method: 'PUT',
+          data,
+        })
+      : await request('/api/v1/hotels/', {
+          method: 'POST',
+          data,
+        });
+
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, input.id ? '更新酒店失败' : '创建酒店失败');
   }
-
-  hotels[idx] = {
-    ...hotels[idx],
-    status: 'submitted',
-    auditNote: undefined,
-    updatedAt: nowISO(),
-  };
-  setHotels(hotels);
-  return hotels[idx];
 }
 
-export function adminApprove(params: { id: string }) {
-  const hotels = getHotels();
-  const idx = hotels.findIndex((h) => h.id === params.id);
-  if (idx < 0) throw new Error('酒店不存在');
-  if (hotels[idx].status !== 'submitted') throw new Error('仅可审核“已提交”');
-
-  hotels[idx] = {
-    ...hotels[idx],
-    status: 'approved',
-    auditNote: undefined,
-    updatedAt: nowISO(),
-  };
-  setHotels(hotels);
-  return hotels[idx];
-}
-
-export function adminReject(params: { id: string; reason: string }) {
-  const reason = params.reason.trim();
-  if (!reason) throw new Error('请输入拒绝原因');
-
-  const hotels = getHotels();
-  const idx = hotels.findIndex((h) => h.id === params.id);
-  if (idx < 0) throw new Error('酒店不存在');
-  if (hotels[idx].status !== 'submitted') throw new Error('仅可审核“已提交”');
-
-  hotels[idx] = {
-    ...hotels[idx],
-    status: 'rejected',
-    auditNote: reason,
-    updatedAt: nowISO(),
-  };
-  setHotels(hotels);
-  return hotels[idx];
-}
-
-export function adminPublish(params: { id: string }) {
-  const hotels = getHotels();
-  const idx = hotels.findIndex((h) => h.id === params.id);
-  if (idx < 0) throw new Error('酒店不存在');
-  if (hotels[idx].status !== 'approved' && hotels[idx].status !== 'offline') {
-    throw new Error('仅可发布“已通过/已下线”');
+export async function submitHotel(params: { id: string; owner?: string }) {
+  try {
+    const response = await request(`/api/v1/hotels/${params.id}/submit`, {
+      method: 'POST',
+    });
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '提交审核失败');
   }
-
-  hotels[idx] = { ...hotels[idx], status: 'published', updatedAt: nowISO() };
-  setHotels(hotels);
-  return hotels[idx];
 }
 
-export function adminOffline(params: { id: string }) {
-  const hotels = getHotels();
-  const idx = hotels.findIndex((h) => h.id === params.id);
-  if (idx < 0) throw new Error('酒店不存在');
-  if (hotels[idx].status !== 'published') {
-    throw new Error('仅可下线“已发布”');
+export async function adminApprove(params: { id: string }) {
+  try {
+    const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
+      method: 'POST',
+      data: { approved: true },
+    });
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '审核通过失败');
   }
+}
 
-  hotels[idx] = { ...hotels[idx], status: 'offline', updatedAt: nowISO() };
-  setHotels(hotels);
-  return hotels[idx];
+export async function adminReject(params: { id: string; reason: string }) {
+  try {
+    const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
+      method: 'POST',
+      data: { approved: false, reason: params.reason },
+    });
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '驳回失败');
+  }
+}
+
+export async function adminPublish(params: { id: string }) {
+  try {
+    const response = await request(
+      `/api/v1/admin/hotels/${params.id}/publish`,
+      {
+        method: 'POST',
+      },
+    );
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '发布失败');
+  }
+}
+
+export async function adminOffline(params: { id: string }) {
+  try {
+    const response = await request(
+      `/api/v1/admin/hotels/${params.id}/offline`,
+      {
+        method: 'POST',
+      },
+    );
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '下线失败');
+  }
+}
+
+export async function adminRestore(params: { id: string }) {
+  try {
+    const response = await request(
+      `/api/v1/admin/hotels/${params.id}/restore`,
+      {
+        method: 'POST',
+      },
+    );
+    return normalizeHotel(extractData<AnyObject>(response) || {});
+  } catch (error) {
+    throw parseError(error, '恢复失败');
+  }
 }

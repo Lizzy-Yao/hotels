@@ -4,7 +4,7 @@ import {
   adminOffline,
   adminPublish,
   adminReject,
-  listHotels,
+  listAdminHotels,
 } from '@/services/localHotels';
 import type { ProColumns } from '@ant-design/pro-components';
 import {
@@ -75,9 +75,9 @@ const AdminAuditsPage: React.FC = () => {
               详情
             </a>
             <a
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  adminApprove({ id: record.id });
+                  await adminApprove({ id: record.id });
                   message.success('已通过');
                   actionRef.current?.reload();
                 } catch (e: any) {
@@ -105,9 +105,9 @@ const AdminAuditsPage: React.FC = () => {
               驳回
             </a>
             <a
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  adminPublish({ id: record.id });
+                  await adminPublish({ id: record.id });
                   message.success('已发布');
                   actionRef.current?.reload();
                 } catch (e: any) {
@@ -122,9 +122,9 @@ const AdminAuditsPage: React.FC = () => {
               发布
             </a>
             <a
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  adminOffline({ id: record.id });
+                  await adminOffline({ id: record.id });
                   message.success('已下线');
                   actionRef.current?.reload();
                 } catch (e: any) {
@@ -150,9 +150,18 @@ const AdminAuditsPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{ labelWidth: 90 }}
-        request={async () => {
-          const data = listHotels();
-          return { data, success: true };
+        request={async (params) => {
+          try {
+            const result = await listAdminHotels({
+              page: params.current,
+              pageSize: params.pageSize,
+              status: params.status as string,
+            });
+            return { data: result.list, success: true, total: result.total };
+          } catch (e: any) {
+            message.error(e?.message || '加载列表失败');
+            return { data: [], success: false, total: 0 };
+          }
         }}
         columns={columns}
         pagination={{ pageSize: 10 }}
@@ -201,10 +210,10 @@ const AdminAuditsPage: React.FC = () => {
         title="驳回原因"
         open={rejectOpen}
         onCancel={() => setRejectOpen(false)}
-        onOk={() => {
+        onOk={async () => {
           if (!current) return;
           try {
-            adminReject({ id: current.id, reason: rejectReason });
+            await adminReject({ id: current.id, reason: rejectReason });
             message.success('已驳回');
             setRejectOpen(false);
             actionRef.current?.reload();

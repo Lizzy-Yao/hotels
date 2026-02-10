@@ -1,6 +1,6 @@
-import { login, registerUser, seedDefaultUsers } from '@/services/localAuth';
+import { login, registerUser } from '@/services/localAuth';
 import { history, useModel } from '@umijs/max';
-import { Button, Card, Form, Input, message } from 'antd';
+import { Button, Card, Form, Input, Select, message } from 'antd';
 import React from 'react';
 
 const RegisterPage: React.FC = () => {
@@ -10,6 +10,7 @@ const RegisterPage: React.FC = () => {
     username: string;
     password: string;
     confirmPassword: string;
+    role: 'MERCHANT' | 'ADMIN';
   }) => {
     try {
       if (values.password !== values.confirmPassword) {
@@ -17,15 +18,14 @@ const RegisterPage: React.FC = () => {
         return;
       }
 
-      seedDefaultUsers();
-      registerUser({
+      await registerUser({
         username: values.username,
         password: values.password,
+        role: values.role,
       });
-      const currentUser = login({
+      const currentUser = await login({
         username: values.username,
         password: values.password,
-        role: 'user',
       });
       await setInitialState?.({ ...initialState, currentUser });
 
@@ -38,8 +38,25 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div style={{ height: '100vh', display: 'grid', placeItems: 'center' }}>
-      <Card title="注册（用户）" style={{ width: 360 }}>
-        <Form layout="vertical" onFinish={onFinish}>
+      <Card title="注册" style={{ width: 360 }}>
+        <Form
+          layout="vertical"
+          onFinish={onFinish}
+          initialValues={{ role: 'MERCHANT' }}
+        >
+          <Form.Item
+            label="注册身份"
+            name="role"
+            rules={[{ required: true, message: '请选择注册身份' }]}
+          >
+            <Select
+              options={[
+                { label: '商户', value: 'MERCHANT' },
+                { label: '管理员', value: 'ADMIN' },
+              ]}
+            />
+          </Form.Item>
+
           <Form.Item
             label="用户名"
             name="username"

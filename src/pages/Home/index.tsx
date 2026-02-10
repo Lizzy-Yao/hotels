@@ -8,7 +8,7 @@ const HomePage: React.FC = () => {
   const currentUser = initialState?.currentUser;
 
   const menuItems =
-    currentUser?.role === 'admin'
+    currentUser?.role === 'ADMIN'
       ? [
           {
             title: '审核 / 发布 / 下线',
@@ -26,7 +26,7 @@ const HomePage: React.FC = () => {
       : [
           {
             title: '酒店信息',
-            desc: '查看和维护自己的酒店信息，支持提交审核。',
+            desc: '查看和维护商户自己的酒店信息，支持提交审核。',
             path: '/user-center/hotels',
             actionText: '进入酒店列表',
           },
@@ -43,12 +43,11 @@ const HomePage: React.FC = () => {
       header={{
         title: '首页',
         subTitle: currentUser
-          ? `当前身份：${currentUser.role === 'admin' ? '管理员' : '用户'}`
+          ? `当前身份：${currentUser.role === 'ADMIN' ? '管理员' : '商户'}`
           : undefined,
       }}
     >
       <div className={styles.container}>
-
         <Row gutter={[16, 16]}>
           {menuItems.map((item) => (
             <Col xs={24} md={12} key={item.path}>

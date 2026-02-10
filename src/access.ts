@@ -1,4 +1,4 @@
-type Role = 'user' | 'admin';
+type Role = 'MERCHANT' | 'ADMIN';
 
 type InitialState = {
   currentUser?: {
@@ -12,7 +12,7 @@ export default (initialState: InitialState) => {
   const isLoggedIn = !!initialState?.currentUser;
   return {
     isLoggedIn,
-    canAccessUser: isLoggedIn && role === 'user',
-    canAccessAdmin: isLoggedIn && role === 'admin',
+    canAccessMerchant: isLoggedIn && role === 'MERCHANT',
+    canAccessAdmin: isLoggedIn && role === 'ADMIN',
   };
 };

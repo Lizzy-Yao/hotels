@@ -6,6 +6,12 @@ export default defineConfig({
   model: {},
   initialState: {},
   request: {},
+  proxy: {
+    '/api': {
+      target: 'http://localhost:3000',
+      changeOrigin: true,
+    },
+  },
   layout: {
     title: '酒店后台',
   },
@@ -28,28 +34,28 @@ export default defineConfig({
 
     {
       path: '/user-center',
-      name: '用户中心',
+      name: '商户中心',
       icon: 'ShopOutlined',
-      access: 'canAccessUser',
+      access: 'canAccessMerchant',
       routes: [
         {
           path: '/user-center/hotels',
           name: '酒店信息',
           icon: 'HomeOutlined',
           component: './merchant/Hotels',
-          access: 'canAccessUser',
+          access: 'canAccessMerchant',
         },
         {
           path: '/user-center/hotels/new',
           component: './merchant/Hotels/Edit',
           hideInMenu: true,
-          access: 'canAccessUser',
+          access: 'canAccessMerchant',
         },
         {
           path: '/user-center/hotels/edit/:id',
           component: './merchant/Hotels/Edit',
           hideInMenu: true,
-          access: 'canAccessUser',
+          access: 'canAccessMerchant',
         },
       ],
     },

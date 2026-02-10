@@ -87,7 +87,7 @@ const UserHotelsPage: React.FC = () => {
             <a
               onClick={async () => {
                 try {
-                  submitHotel({ id: record.id, owner: owner || '' });
+                  await submitHotel({ id: record.id, owner: owner || '' });
                   message.success('已提交审核');
                   actionRef.current?.reload();
                 } catch (e: any) {
@@ -137,9 +137,21 @@ const UserHotelsPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{ labelWidth: 100 }}
-        request={async () => {
-          const data = owner ? listHotels({ owner }) : [];
-          return { data, success: true };
+        request={async (params) => {
+          try {
+            if (!owner) return { data: [], success: true, total: 0 };
+
+            const result = await listHotels({
+              page: params.current,
+              pageSize: params.pageSize,
+              status: params.status as string,
+            });
+
+            return { data: result.list, success: true, total: result.total };
+          } catch (e: any) {
+            message.error(e?.message || '加载列表失败');
+            return { data: [], success: false, total: 0 };
+          }
         }}
         columns={columns}
         pagination={{ pageSize: 10 }}

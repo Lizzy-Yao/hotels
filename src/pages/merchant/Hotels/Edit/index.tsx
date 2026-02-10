@@ -22,20 +22,21 @@ export default function HotelEditPage() {
 
   useEffect(() => {
     if (isEdit && id) {
-      const data = getHotel(id);
-      if (data) {
-        setInitialValues(data);
-        form.setFieldsValue(data); // 关键：回填数据
-      } else {
-        message.error('未找到该酒店');
-        history.push('/user-center/hotels');
-      }
+      getHotel(id)
+        .then((data) => {
+          setInitialValues(data);
+          form.setFieldsValue(data);
+        })
+        .catch((e: any) => {
+          message.error(e?.message || '未找到该酒店');
+          history.push('/user-center/hotels');
+        });
     }
   }, [id, isEdit, form]);
 
   const handleFinish = async (values: any) => {
     try {
-      upsertHotel({
+      await upsertHotel({
         ...values,
         id: isEdit ? id : undefined,
         owner: initialState?.currentUser?.username || '',
