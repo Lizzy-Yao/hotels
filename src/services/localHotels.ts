@@ -8,7 +8,7 @@ export type HotelStatus =
   | 'published'
   | 'offline';
 
-export type RoomType = { name: string; price: number };
+export type RoomType = { name: string; basePriceCents: number };
 
 export type DiscountScenario = {
   id: string;
@@ -24,7 +24,7 @@ export type Hotel = {
   nameCn: string;
   nameEn: string;
   address: string;
-  star: number;
+  starRating: number;
   roomTypes: RoomType[];
   openingDate: string;
   status: HotelStatus;
@@ -69,7 +69,7 @@ function normalizeRoomTypes(value: any): RoomType[] {
   return value
     .map((item) => ({
       name: item?.name || item?.room_name || '',
-      price: Number(item?.price ?? item?.amount ?? 0),
+      basePriceCents: Number(item?.basePriceCents ?? item?.amount ?? 0),
     }))
     .filter((item) => item.name);
 }
@@ -92,7 +92,7 @@ function normalizeHotel(raw: AnyObject): Hotel {
     nameCn: String(raw?.nameCn || raw?.name_cn || raw?.name || ''),
     nameEn: String(raw?.nameEn || raw?.name_en || ''),
     address: String(raw?.address || ''),
-    star: Number(raw?.star ?? 0),
+    starRating: Number(raw?.starRating ?? 0),
     roomTypes: normalizeRoomTypes(raw?.roomTypes || raw?.room_types),
     openingDate: String(raw?.openingDate || raw?.opening_date || ''),
     status: normalizeStatus(raw?.status),
@@ -182,7 +182,7 @@ export async function upsertHotel(input: {
   nameCn: string;
   nameEn: string;
   address: string;
-  star: number;
+  starRating: number;
   roomTypes: RoomType[];
   openingDate: string;
   nearbyAttractions?: string[];
@@ -195,7 +195,7 @@ export async function upsertHotel(input: {
     nameCn: input.nameCn,
     nameEn: input.nameEn,
     address: input.address,
-    star: input.star,
+    starRating: input.starRating,
     roomTypes: input.roomTypes,
     openingDate: input.openingDate,
     nearbyAttractions: input.nearbyAttractions,

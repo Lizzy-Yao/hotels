@@ -41,7 +41,7 @@ const UserHotelsPage: React.FC = () => {
     { title: '酒店名(中文)', dataIndex: 'nameCn' },
     { title: '酒店名(英文)', dataIndex: 'nameEn' },
     { title: '地址', dataIndex: 'address', ellipsis: true },
-    { title: '星级', dataIndex: 'star', width: 80 },
+    { title: '星级', dataIndex: 'starRating', width: 80 },
     { title: '开业时间', dataIndex: 'openingDate', width: 120 },
     {
       title: '状态',
@@ -176,7 +176,7 @@ const UserHotelsPage: React.FC = () => {
                 { title: '酒店名(中文)', dataIndex: 'nameCn' },
                 { title: '酒店名(英文)', dataIndex: 'nameEn' },
                 { title: '地址', dataIndex: 'address' },
-                { title: '星级', dataIndex: 'star' },
+                { title: '星级', dataIndex: 'starRating' },
                 { title: '开业时间', dataIndex: 'openingDate' },
 
                 // --- 新增维度展示 ---
@@ -241,7 +241,7 @@ const UserHotelsPage: React.FC = () => {
                   span: 2,
                   render: (_, r) =>
                     r.roomTypes
-                      .map((x) => `${x.name}：${x.price} 元`)
+                      .map((x) => `${x.name}：${x.basePriceCents} 元`)
                       .join('；'),
                 },
               ]}

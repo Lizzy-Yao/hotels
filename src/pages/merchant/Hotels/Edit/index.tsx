@@ -84,7 +84,7 @@ export default function HotelEditPage() {
 
           <ProForm.Group>
             <ProFormDigit
-              name="star"
+              name="starRating"
               label="星级"
               min={1}
               max={5}
@@ -207,7 +207,7 @@ export default function HotelEditPage() {
                   rules={[{ required: true }]}
                 />
                 <ProFormDigit
-                  name="price"
+                  name="basePriceCents"
                   label="价格(元)"
                   rules={[{ required: true }]}
                 />
