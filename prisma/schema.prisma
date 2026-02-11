@@ -28,7 +28,7 @@ enum NearbyType {
 }
 
 enum PromotionType {
-  PERCENT_OFF
+  percentOff
   PACKAGE_MINUS
 }
 

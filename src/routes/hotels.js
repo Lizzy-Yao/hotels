@@ -8,43 +8,43 @@ const router = express.Router();
 // 子结构校验
 const roomTypeSchema = z.object({
   name: z.string().min(1),
-  bed_type: z.string().optional(),
+  bedType: z.string().optional(),
   capacity: z.number().int().optional(),
-  area_sqm: z.number().optional(),
-  base_price_cents: z.number().int().nonnegative(),
+  areaSqm: z.number().optional(),
+  basePriceCents: z.number().int().nonnegative(),
   currency: z.string().optional()
 });
 
 const nearbySchema = z.object({
   type: z.enum(["ATTRACTION", "TRANSPORT", "MALL"]),
   name: z.string().min(1),
-  distance_meters: z.number().int().nonnegative().optional(),
+  distanceMeters: z.number().int().nonnegative().optional(),
   address: z.string().optional()
 });
 
 const promotionSchema = z.object({
-  type: z.enum(["PERCENT_OFF", "PACKAGE_MINUS"]),
+  type: z.enum(["percentOff", "PACKAGE_MINUS"]),
   title: z.string().min(1),
   description: z.string().optional(),
-  start_date: z.string().datetime().optional(),
-  end_date: z.string().datetime().optional(),
-  percent_off: z.number().int().optional(),        // 80 表示 8 折
-  amount_off_cents: z.number().int().optional(),  // 套餐立减金额
-  conditions_json: z.any().optional(),
-  is_active: z.boolean().optional()
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  percentOff: z.number().int().optional(),        // 80 表示 8 折
+  amountOffCents: z.number().int().optional(),  // 套餐立减金额
+  conditionsJson: z.any().optional(),
+  isActive: z.boolean().optional()
 });
 
 const hotelUpsertSchema = z.object({
-  name_cn: z.string().min(1),
-  name_en: z.string().optional(),
+  nameCn: z.string().min(1),
+  nameEn: z.string().optional(),
   address: z.string().min(1),
-  star_rating: z.number().int().min(0).max(5),
-  open_date: z.string().datetime().optional(),
-  min_price_cents: z.number().int().optional(),
-  max_price_cents: z.number().int().optional(),
+  starRating: z.number().int().min(0).max(5),
+  openDate: z.string().datetime().optional(),
+  minPriceCents: z.number().int().optional(),
+  maxPriceCents: z.number().int().optional(),
   currency: z.string().optional(),
-  room_types: z.array(roomTypeSchema).optional(),
-  nearby_places: z.array(nearbySchema).optional(),
+  roomTypes: z.array(roomTypeSchema).optional(),
+  nearbyPlaces: z.array(nearbySchema).optional(),
   promotions: z.array(promotionSchema).optional()
 });
 
@@ -56,30 +56,30 @@ router.post("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) 
     const hotel = await prisma.hotel.create({
       data: {
         merchantId: req.user.id,
-        nameCn: body.name_cn,
-        nameEn: body.name_en,
+        nameCn: body.nameCn,
+        nameEn: body.nameEn,
         address: body.address,
-        starRating: body.star_rating,
-        openDate: body.open_date ? new Date(body.open_date) : null,
-        minPriceCents: body.min_price_cents,
-        maxPriceCents: body.max_price_cents,
+        starRating: body.starRating,
+        openDate: body.openDate ? new Date(body.openDate) : null,
+        minPriceCents: body.minPriceCents,
+        maxPriceCents: body.maxPriceCents,
         currency: body.currency || "CNY",
         status: "DRAFT",
-        roomTypes: body.room_types ? {
-          create: body.room_types.map(r => ({
+        roomTypes: body.roomTypes ? {
+          create: body.roomTypes.map(r => ({
             name: r.name,
-            bedType: r.bed_type,
+            bedType: r.bedType,
             capacity: r.capacity,
-            areaSqm: r.area_sqm,
-            basePriceCents: r.base_price_cents,
+            areaSqm: r.areaSqm,
+            basePriceCents: r.basePriceCents,
             currency: r.currency || body.currency || "CNY"
           }))
         } : undefined,
-        nearbyPlaces: body.nearby_places ? {
-          create: body.nearby_places.map(n => ({
+        nearbyPlaces: body.nearbyPlaces ? {
+          create: body.nearbyPlaces.map(n => ({
             type: n.type,
             name: n.name,
-            distanceMeters: n.distance_meters,
+            distanceMeters: n.distanceMeters,
             address: n.address
           }))
         } : undefined,
@@ -88,12 +88,12 @@ router.post("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) 
             type: p.type,
             title: p.title,
             description: p.description,
-            startDate: p.start_date ? new Date(p.start_date) : null,
-            endDate: p.end_date ? new Date(p.end_date) : null,
-            percentOff: p.percent_off,
-            amountOffCents: p.amount_off_cents,
-            conditionsJson: p.conditions_json,
-            isActive: p.is_active ?? true
+            startDate: p.startDate ? new Date(p.startDate) : null,
+            endDate: p.endDate ? new Date(p.endDate) : null,
+            percentOff: p.percentOff,
+            amountOffCents: p.amountOffCents,
+            conditionsJson: p.conditionsJson,
+            isActive: p.isActive ?? true
           }))
         } : undefined,
         auditLogs: {
@@ -136,33 +136,33 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
       const updated = await tx.hotel.update({
         where: { id: hotelId },
         data: {
-          nameCn: body.name_cn,
-          nameEn: body.name_en,
+          nameCn: body.nameCn,
+          nameEn: body.nameEn,
           address: body.address,
-          starRating: body.star_rating,
-          openDate: body.open_date ? new Date(body.open_date) : null,
-          minPriceCents: body.min_price_cents,
-          maxPriceCents: body.max_price_cents,
+          starRating: body.starRating,
+          openDate: body.openDate ? new Date(body.openDate) : null,
+          minPriceCents: body.minPriceCents,
+          maxPriceCents: body.maxPriceCents,
           currency: body.currency || existing.currency || "CNY",
           // REJECTED 编辑后仍保持 REJECTED，直到商户 submit 再变 SUBMITTED
           auditLogs: {
             create: { operatorId: req.user.id, action: "UPDATE", note: "merchant update" }
           },
-          roomTypes: body.room_types ? {
-            create: body.room_types.map(r => ({
+          roomTypes: body.roomTypes ? {
+            create: body.roomTypes.map(r => ({
               name: r.name,
-              bedType: r.bed_type,
+              bedType: r.bedType,
               capacity: r.capacity,
-              areaSqm: r.area_sqm,
-              basePriceCents: r.base_price_cents,
+              areaSqm: r.areaSqm,
+              basePriceCents: r.basePriceCents,
               currency: r.currency || body.currency || existing.currency || "CNY"
             }))
           } : undefined,
-          nearbyPlaces: body.nearby_places ? {
-            create: body.nearby_places.map(n => ({
+          nearbyPlaces: body.nearbyPlaces ? {
+            create: body.nearbyPlaces.map(n => ({
               type: n.type,
               name: n.name,
-              distanceMeters: n.distance_meters,
+              distanceMeters: n.distanceMeters,
               address: n.address
             }))
           } : undefined,
@@ -171,12 +171,12 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
               type: p.type,
               title: p.title,
               description: p.description,
-              startDate: p.start_date ? new Date(p.start_date) : null,
-              endDate: p.end_date ? new Date(p.end_date) : null,
-              percentOff: p.percent_off,
-              amountOffCents: p.amount_off_cents,
-              conditionsJson: p.conditions_json,
-              isActive: p.is_active ?? true
+              startDate: p.startDate ? new Date(p.startDate) : null,
+              endDate: p.endDate ? new Date(p.endDate) : null,
+              percentOff: p.percentOff,
+              amountOffCents: p.amountOffCents,
+              conditionsJson: p.conditionsJson,
+              isActive: p.isActive ?? true
             }))
           } : undefined
         },
