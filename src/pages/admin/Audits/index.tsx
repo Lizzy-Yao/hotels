@@ -47,7 +47,7 @@ const AdminAuditsPage: React.FC = () => {
     { title: '酒店名(英文)', dataIndex: 'nameEn' },
     { title: '用户', dataIndex: 'owner', width: 120 },
     { title: '星级', dataIndex: 'starRating', width: 80 },
-    { title: '开业时间', dataIndex: 'openingDate', width: 120 },
+    { title: '开业时间', dataIndex: 'openDate', width: 120 },
     {
       title: '状态',
       dataIndex: 'status',
@@ -188,7 +188,7 @@ const AdminAuditsPage: React.FC = () => {
                 { title: '酒店名(英文)', dataIndex: 'nameEn' },
                 { title: '地址', dataIndex: 'address', span: 2 },
                 { title: '星级', dataIndex: 'starRating' },
-                { title: '开业时间', dataIndex: 'openingDate' },
+                { title: '开业时间', dataIndex: 'openDate' },
                 {
                   title: '房型/价格',
                   dataIndex: 'roomTypes',

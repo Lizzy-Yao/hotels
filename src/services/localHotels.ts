@@ -26,7 +26,7 @@ export type Hotel = {
   address: string;
   starRating: number;
   roomTypes: RoomType[];
-  openingDate: string;
+  openDate: string;
   status: HotelStatus;
   nearbyAttractions?: string[];
   transportation?: string;
@@ -94,7 +94,7 @@ function normalizeHotel(raw: AnyObject): Hotel {
     address: String(raw?.address || ''),
     starRating: Number(raw?.starRating ?? 0),
     roomTypes: normalizeRoomTypes(raw?.roomTypes || raw?.room_types),
-    openingDate: String(raw?.openingDate || raw?.opening_date || ''),
+    openDate: String(raw?.openDate || raw?.opening_date || ''),
     status: normalizeStatus(raw?.status),
     nearbyAttractions:
       raw?.nearbyAttractions || raw?.nearby_attractions || undefined,
@@ -184,7 +184,7 @@ export async function upsertHotel(input: {
   address: string;
   starRating: number;
   roomTypes: RoomType[];
-  openingDate: string;
+  openDate: string;
   nearbyAttractions?: string[];
   transportation?: string;
   nearbyMalls?: string[];
@@ -197,7 +197,7 @@ export async function upsertHotel(input: {
     address: input.address,
     starRating: input.starRating,
     roomTypes: input.roomTypes,
-    openingDate: input.openingDate,
+    openDate: input.openDate,
     nearbyAttractions: input.nearbyAttractions,
     transportation: input.transportation,
     nearbyMalls: input.nearbyMalls,
@@ -236,7 +236,7 @@ export async function adminApprove(params: { id: string }) {
   try {
     const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
       method: 'POST',
-      data: { approved: true },
+      data: { result: "APPROVE" },
     });
     return normalizeHotel(extractData<AnyObject>(response) || {});
   } catch (error) {
@@ -248,7 +248,7 @@ export async function adminReject(params: { id: string; reason: string }) {
   try {
     const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
       method: 'POST',
-      data: { approved: false, reason: params.reason },
+      data: { result: "REJECT", reason: params.reason },
     });
     return normalizeHotel(extractData<AnyObject>(response) || {});
   } catch (error) {

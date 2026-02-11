@@ -42,7 +42,7 @@ const UserHotelsPage: React.FC = () => {
     { title: '酒店名(英文)', dataIndex: 'nameEn' },
     { title: '地址', dataIndex: 'address', ellipsis: true },
     { title: '星级', dataIndex: 'starRating', width: 80 },
-    { title: '开业时间', dataIndex: 'openingDate', width: 120 },
+    { title: '开业时间', dataIndex: 'openDate', width: 120 },
     {
       title: '状态',
       dataIndex: 'status',
@@ -177,7 +177,7 @@ const UserHotelsPage: React.FC = () => {
                 { title: '酒店名(英文)', dataIndex: 'nameEn' },
                 { title: '地址', dataIndex: 'address' },
                 { title: '星级', dataIndex: 'starRating' },
-                { title: '开业时间', dataIndex: 'openingDate' },
+                { title: '开业时间', dataIndex: 'openDate' },
 
                 // --- 新增维度展示 ---
                 {

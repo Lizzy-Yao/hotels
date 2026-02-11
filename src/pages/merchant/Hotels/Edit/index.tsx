@@ -92,7 +92,7 @@ export default function HotelEditPage() {
               width="xs"
             />
             <ProFormDatePicker
-              name="openingDate"
+              name="openDate"
               label="开业时间"
               rules={[{ required: true }]}
               width="md"
