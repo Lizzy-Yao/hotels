@@ -196,50 +196,115 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
 });
 
 // 我的酒店列表
-router.get("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) => {
-  try {
-    const { status, page = "1", pageSize = "10" } = req.query;
-    const p = Math.max(1, parseInt(page, 10));
-    const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10)));
+// 我的酒店列表
+router.get(
+  "/",
+  authRequired,
+  roleRequired("MERCHANT"),
+  async (req, res, next) => {
+    try {
+      const { status, page = "1", pageSize = "10" } = req.query;
+      const p = Math.max(1, parseInt(page, 10));
+      const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10)));
 
-    const where = {
-      merchantId: req.user.id,
-      ...(status ? { status } : {})
-    };
+      const where = {
+        merchantId: req.user.id,
+        ...(status ? { status } : {}),
+      };
 
-    const [total, items] = await Promise.all([
-      prisma.hotel.count({ where }),
-      prisma.hotel.findMany({
-        where,
-        orderBy: { updatedAt: "desc" },
-        skip: (p - 1) * ps,
-        take: ps,
+      const now = new Date();
 
-        // ✅ 关键：把 NearbyPlace 原样带出来
-        include: {
-          nearbyPlaces: {
-            orderBy: [
-              { type: "asc" },
-              { createdAt: "asc" }
-            ]
-          }
-        }
-      })
-    ]);
-
-    const formattedItems = items.map(item => {
-      const newItem = { ...item };
-      if (newItem.openDate) {
-        newItem.openDate = format(new Date(newItem.openDate), "yyyy-MM-dd");
+      function isPromotionEffective(promo) {
+        if (promo.isActive === false) return false;
+        if (promo.startDate && now < promo.startDate) return false;
+        if (promo.endDate && now > promo.endDate) return false;
+        return true;
       }
-      return newItem;
-    });
 
-    res.json({ page: p, pageSize: ps, total, items: formattedItems });
-  } catch (err) {
-    next(err);
+      function mapPromotionToDiscount(promo) {
+        // 你的 schema: PromotionType = percentOff | PACKAGE_MINUS
+        if (promo.type === "percentOff") {
+          const percent = Number(promo.percentOff ?? 0); // 例如 20 表示便宜 20%
+          const value = (100 - percent) / 100; // 20 -> 0.8 -> 8折
+          return {
+            type: "discount",
+            name: promo.title,
+            value,
+            description: promo.description || "",
+          };
+        }
+
+        // PACKAGE_MINUS：立减
+        const amountYuan = Number(promo.amountOffCents ?? 0) / 100;
+        return {
+          type: "minus",
+          name: promo.title,
+          value: amountYuan,
+          description: promo.description || "",
+        };
+      }
+
+      const [total, items] = await Promise.all([
+        prisma.hotel.count({ where }),
+        prisma.hotel.findMany({
+          where,
+          orderBy: { updatedAt: "desc" },
+          skip: (p - 1) * ps,
+          take: ps,
+          include: {
+            nearbyPlaces: {
+              orderBy: [{ type: "asc" }, { createdAt: "asc" }],
+            },
+
+            // ✅ 房型/价格：按前端字段名 roomTypes 直接返回
+            roomTypes: {
+              select: {
+                id: true,
+                name: true,
+                basePriceCents: true,
+                currency: true,
+              },
+              orderBy: { basePriceCents: "asc" },
+            },
+
+            // ✅ 优惠活动：从 promotions 映射到 discounts
+            promotions: {
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                description: true,
+                percentOff: true,
+                amountOffCents: true,
+                startDate: true,
+                endDate: true,
+                isActive: true,
+              },
+              orderBy: { createdAt: "desc" },
+            },
+          },
+        }),
+      ]);
+
+      const mappedItems = items.map((h) => {
+        const discounts = (h.promotions || [])
+          .filter(isPromotionEffective)
+          .map(mapPromotionToDiscount);
+
+        // 把 promotions 移除，换成 discounts 字段名
+        const { promotions, ...rest } = h;
+        return {
+          ...rest,
+          discounts,
+        };
+      });
+
+      res.json({ page: p, pageSize: ps, total, items: mappedItems });
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 
 
