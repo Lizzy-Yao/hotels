@@ -26,7 +26,22 @@ router.get("/hotels", async (req, res, next) => {
           starRating: true,
           minPriceCents: true,
           maxPriceCents: true,
-          currency: true
+          currency: true,
+
+          // ✅ 加上关联表返回
+          nearbyPlaces: {
+            select: {
+              id: true,
+              type: true,
+              name: true,
+              distanceMeters: true,
+              address: true
+            },
+            orderBy: [
+              { type: "asc" },
+              { distanceMeters: "asc" }
+            ]
+          }
         }
       })
     ]);
@@ -36,6 +51,7 @@ router.get("/hotels", async (req, res, next) => {
     next(err);
   }
 });
+
 
 router.get("/hotels/:id", async (req, res, next) => {
   try {

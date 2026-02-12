@@ -213,21 +213,35 @@ router.get("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) =
         where,
         orderBy: { updatedAt: "desc" },
         skip: (p - 1) * ps,
-        take: ps
+        take: ps,
+
+        // ✅ 关键：把 NearbyPlace 原样带出来
+        include: {
+          nearbyPlaces: {
+            orderBy: [
+              { type: "asc" },
+              { createdAt: "asc" }
+            ]
+          }
+        }
       })
     ]);
+
     const formattedItems = items.map(item => {
       const newItem = { ...item };
       if (newItem.openDate) {
-        newItem.openDate = format(new Date(newItem.openDate), 'yyyy-MM-dd');
+        newItem.openDate = format(new Date(newItem.openDate), "yyyy-MM-dd");
       }
       return newItem;
     });
-    res.json({ page: p, pageSize: ps, total, items:formattedItems });
+
+    res.json({ page: p, pageSize: ps, total, items: formattedItems });
   } catch (err) {
     next(err);
   }
 });
+
+
 
 // 酒店详情（商户）
 router.get("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next) => {
