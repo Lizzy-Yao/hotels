@@ -182,41 +182,45 @@ const UserHotelsPage: React.FC = () => {
                 // --- 新增维度展示 ---
                 {
                   title: '交通信息',
-                  dataIndex: 'transportation',
-                  span: 2, // 占满一行
-                  render: (dom) => dom || '暂无数据',
+                  span: 2,
+                  render: (_, r) => {
+                    const list = r.nearbyPlaces?.filter(p => p.type === 'TRANSPORT')
+                    return list?.length
+                    ? list.map(p => p.name).join('、')
+                    : '暂无数据'
+                    },
                 },
                 {
                   title: '周边景点',
-                  dataIndex: 'nearbyAttractions',
                   span: 2,
-                  render: (_, r) => (
+                  render: (_, r) => {
+                    const list = r.nearbyPlaces?.filter(p => p.type === 'ATTRACTION')
+                    return list?.length ? (
                     <Space size={4} wrap>
-                      {r.nearbyAttractions?.length
-                        ? r.nearbyAttractions.map((tag) => (
-                            <Tag key={tag} color="blue">
-                              {tag}
-                            </Tag>
-                          ))
-                        : '暂无数据'}
+                    {list.map(p => (
+                    <Tag key={p.id} color="blue">
+                    {p.name}
+                    </Tag>
+                    ))}
                     </Space>
-                  ),
+                    ) : '暂无数据'
+                  },
                 },
                 {
                   title: '周边商场',
-                  dataIndex: 'nearbyMalls',
                   span: 2,
-                  render: (_, r) => (
+                  render: (_, r) => {
+                    const list = r.nearbyPlaces?.filter(p => p.type === 'MALL')
+                    return list?.length ? (
                     <Space size={4} wrap>
-                      {r.nearbyMalls?.length
-                        ? r.nearbyMalls.map((tag) => (
-                            <Tag key={tag} color="cyan">
-                              {tag}
-                            </Tag>
-                          ))
-                        : '暂无数据'}
+                    {list.map(p => (
+                    <Tag key={p.id} color="cyan">
+                    {p.name}
+                    </Tag>
+                    ))}
                     </Space>
-                  ),
+                    ) : '暂无数据'
+                  },
                 },
                 {
                   title: '优惠活动',

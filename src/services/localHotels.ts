@@ -28,7 +28,7 @@ export type Hotel = {
   roomTypes: RoomType[];
   openDate: string;
   status: HotelStatus;
-  nearbyAttractions?: string[];
+  nearbyPlaces?: string[];
   transportation?: string;
   nearbyMalls?: string[];
   discounts?: DiscountScenario[];
@@ -96,8 +96,8 @@ function normalizeHotel(raw: AnyObject): Hotel {
     roomTypes: normalizeRoomTypes(raw?.roomTypes || raw?.room_types),
     openDate: String(raw?.openDate || raw?.opening_date || ''),
     status: normalizeStatus(raw?.status),
-    nearbyAttractions:
-      raw?.nearbyAttractions || raw?.nearby_attractions || undefined,
+    nearbyPlaces:
+      raw?.nearbyPlaces || raw?.nearby_attractions || undefined,
     transportation: raw?.transportation || undefined,
     nearbyMalls: raw?.nearbyMalls || raw?.nearby_malls || undefined,
     discounts: normalizeDiscounts(raw?.discounts),
@@ -185,11 +185,31 @@ export async function upsertHotel(input: {
   starRating: number;
   roomTypes: RoomType[];
   openDate: string;
-  nearbyAttractions?: string[];
+  nearbyPlaces?: string[];
   transportation?: string;
   nearbyMalls?: string[];
   discounts?: DiscountScenario[];
 }) {
+  const normalizedNearbyPlaces = [
+    ...(input.transportation
+      ? [
+          {
+            type: 'TRANSPORT',
+            name: input.transportation,
+          },
+        ]
+      : []),
+
+    ...(input.nearbyPlaces || []).map((name) => ({
+      type: 'ATTRACTION',
+      name,
+    })),
+
+    ...(input.nearbyMalls || []).map((name) => ({
+      type: 'MALL',
+      name,
+    })),
+  ];
   const data = {
     owner: input.owner,
     nameCn: input.nameCn,
@@ -198,7 +218,7 @@ export async function upsertHotel(input: {
     starRating: input.starRating,
     roomTypes: input.roomTypes,
     openDate: input.openDate,
-    nearbyAttractions: input.nearbyAttractions,
+    nearbyPlaces: normalizedNearbyPlaces,
     transportation: input.transportation,
     nearbyMalls: input.nearbyMalls,
     discounts: input.discounts,

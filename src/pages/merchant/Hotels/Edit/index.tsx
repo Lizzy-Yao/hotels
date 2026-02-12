@@ -102,7 +102,7 @@ export default function HotelEditPage() {
           {/* --- 新增：可选维度信息 --- */}
           <ProForm.Group title="周边与交通（选填）">
             <ProFormSelect
-              name="nearbyAttractions"
+              name="nearbyPlaces"
               label="周边热门景点"
               mode="tags"
               placeholder="输入景点后回车，可输入多个"
