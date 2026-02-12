@@ -2,7 +2,7 @@ const express = require("express");
 const { z } = require("zod");
 const prisma = require("../prisma");
 const { authRequired, roleRequired } = require("../middlewares/auth");
-
+const { format } = require('date-fns');
 const router = express.Router();
 
 // 子结构校验
@@ -216,8 +216,14 @@ router.get("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) =
         take: ps
       })
     ]);
-
-    res.json({ page: p, pageSize: ps, total, items });
+    const formattedItems = items.map(item => {
+      const newItem = { ...item };
+      if (newItem.openDate) {
+        newItem.openDate = format(new Date(newItem.openDate), 'yyyy-MM-dd');
+      }
+      return newItem;
+    });
+    res.json({ page: p, pageSize: ps, total, items:formattedItems });
   } catch (err) {
     next(err);
   }
