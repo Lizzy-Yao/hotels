@@ -43,6 +43,7 @@ const UserHotelsPage: React.FC = () => {
     { title: '地址', dataIndex: 'address', ellipsis: true },
     { title: '星级', dataIndex: 'starRating', width: 80 },
     { title: '开业时间', dataIndex: 'openDate', width: 120 },
+
     {
       title: '状态',
       dataIndex: 'status',
@@ -166,10 +167,11 @@ const UserHotelsPage: React.FC = () => {
       >
         {current ? (
           <>
-            <Typography.Paragraph type="secondary">
-              {statusTag(current.status)}
-              {current.auditNote ? `  审核意见：${current.auditNote}` : ''}
-            </Typography.Paragraph>
+           <Typography.Paragraph type="secondary">
+            {statusTag(current.status)}
+            {current.rejectReason ? `  驳回原因：${current.rejectReason}` : ''}
+            {current.auditNote ? `  审核意见：${current.auditNote}` : ''}
+          </Typography.Paragraph>
             <ProDescriptions<Hotel>
               column={2}
               dataSource={current}
@@ -249,6 +251,7 @@ const UserHotelsPage: React.FC = () => {
                       .map((x) => `${x.name}：${x.basePriceCents} 元`)
                       .join('；'),
                 },
+
               ]}
             />
           </>

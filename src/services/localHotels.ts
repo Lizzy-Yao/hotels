@@ -105,6 +105,7 @@ function normalizeHotel(raw: AnyObject): Hotel {
     auditNote: raw?.auditNote || raw?.audit_note || undefined,
     createdAt: String(raw?.createdAt || raw?.created_at || ''),
     updatedAt: String(raw?.updatedAt || raw?.updated_at || ''),
+    rejectReason: String(raw?.rejectReason),
   };
 }
 
