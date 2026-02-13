@@ -89,7 +89,7 @@ function normalizeDiscounts(value: any): DiscountScenario[] | undefined {
 function normalizeHotel(raw: AnyObject): Hotel {
   return {
     id: String(raw?.id || raw?._id || ''),
-    owner: String(raw?.owner || raw?.merchant_id || raw?.merchantId || ''),
+    owner: String(raw?.owner || raw?.merchant_id || raw?.merchant.username || ''),
     nameCn: String(raw?.nameCn || raw?.name_cn || raw?.name || ''),
     nameEn: String(raw?.nameEn || raw?.name_en || ''),
     address: String(raw?.address || ''),

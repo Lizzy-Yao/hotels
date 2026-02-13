@@ -45,7 +45,7 @@ const AdminAuditsPage: React.FC = () => {
   const columns: ProColumns<Hotel>[] = [
     { title: '酒店名(中文)', dataIndex: 'nameCn' },
     { title: '酒店名(英文)', dataIndex: 'nameEn' },
-    { title: '用户', dataIndex: 'owner', width: 120 },
+    { title: '商户', dataIndex: 'owner', width: 120 },
     { title: '星级', dataIndex: 'starRating', width: 80 },
     { title: '开业时间', dataIndex: 'openDate', width: 120 },
     {
@@ -145,7 +145,7 @@ const AdminAuditsPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: '酒店审核 / 发布 / 下线（管理员）' }}>
+    <PageContainer header={{ title: '酒店审核' }}>
       <ProTable<Hotel>
         actionRef={actionRef}
         rowKey="id"

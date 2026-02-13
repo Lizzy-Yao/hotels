@@ -68,7 +68,7 @@ export default defineConfig({
       routes: [
         {
           path: '/admin/audits',
-          name: '审核/发布/下线',
+          name: '商户审核',
           icon: 'CheckCircleOutlined',
           component: './admin/Audits',
           access: 'canAccessAdmin',

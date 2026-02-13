@@ -11,7 +11,7 @@ const HomePage: React.FC = () => {
     currentUser?.role === 'ADMIN'
       ? [
           {
-            title: '审核 / 发布 / 下线',
+            title: '审核',
             desc: '审核用户提交的酒店信息，并进行发布、下线管理。',
             path: '/admin/audits',
             actionText: '进入审核页',
