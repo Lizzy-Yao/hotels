@@ -85,22 +85,28 @@ function toFormValues(hotel: any): HotelFormValues {
 
 // 表单值 -> 提交 payload（按你后端字段还原）
 function toSubmitPayload(values: any, existingHotel: any) {
-  const openDate = values?.openDate ? values.openDate.format('YYYY-MM-DD') : undefined;
+  // const openDate = values?.openDate ? values.openDate.format('YYYY-MM-DD') : undefined;
+  const openDate = values?.openDate 
+  ? (dayjs.isDayjs(values.openDate) ? values.openDate.format('YYYY-MM-DD') : values.openDate) 
+  : undefined;
 
   const nearbyPlaces = [
-    ...(values?.nearbyPlaces ?? []).map((name: string) => ({
+    ...(values?.nearbyPlaces ?? []).map((n: any) => ({
       type: 'ATTRACTION',
-      name,
+      name: typeof n === 'string' ? n : n.value,
     })),
-    ...(values?.nearbyMalls ?? []).map((name: string) => ({
+    ...(values?.nearbyMalls ?? []).map((n: any) => ({
       type: 'MALL',
-      name,
+      name: typeof n === 'string' ? n : n.value,
     })),
     ...(values?.transportation
       ? [
           {
             type: 'TRANSPORT',
-            name: values.transportation,
+            name:
+              typeof values.transportation === 'string'
+                ? values.transportation
+                : values.transportation.value,
           },
         ]
       : []),
@@ -152,21 +158,22 @@ export default function HotelEditPage() {
   const owner = useMemo(() => initialState?.currentUser?.username || '', [initialState]);
 
   const handleFinish = async (values: any) => {
+    console.log("开始提交");
+  
     try {
-      const payload = toSubmitPayload(values, rawHotel);
+      const payload = { ...values };
+      const res = await upsertHotel(payload);
 
-      await upsertHotel({
-        ...payload,
-        id: isEdit ? id : undefined,
-        owner,
-      });
+      message.success("保存成功");
+      history.push("/user-center/hotels");
 
-      message.success('保存成功');
-      history.push('/user-center/hotels');
-    } catch (e: any) {
-      message.error(e?.message || '保存失败');
+    } catch (e) {
+      console.log("发生异常:", e);
+      message.error("失败");
     }
   };
+  
+  
 
   return (
     <PageContainer title={isEdit ? '编辑酒店' : '新建酒店'}>

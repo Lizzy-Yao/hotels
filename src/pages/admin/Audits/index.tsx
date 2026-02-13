@@ -183,7 +183,7 @@ const AdminAuditsPage: React.FC = () => {
               column={2}
               dataSource={current}
               columns={[
-                { title: '用户', dataIndex: 'owner' },
+                { title: '商户', dataIndex: 'owner' },
                 { title: '酒店名(中文)', dataIndex: 'nameCn' },
                 { title: '酒店名(英文)', dataIndex: 'nameEn' },
                 { title: '地址', dataIndex: 'address', span: 2 },
