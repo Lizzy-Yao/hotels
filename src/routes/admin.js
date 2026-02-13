@@ -24,7 +24,17 @@ router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next
         orderBy: { updatedAt: "desc" },
         skip: (p - 1) * ps,
         take: ps,
-        include: { merchant: { select: { id: true, username: true } } }
+        include: { 
+          merchant: { select: { id: true, username: true } }, 
+          roomTypes: {
+            select: {
+              id: true,
+              name: true,
+              basePriceCents: true,
+              currency: true,
+            },
+            orderBy: { basePriceCents: "asc" },
+        }, }
       })
     ]);
     const formattedItems = items.map(item => {
