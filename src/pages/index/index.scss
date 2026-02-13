@@ -1,0 +1,128 @@
+.home-page {
+  min-height: 100vh;
+  background-color: #F5F7FA;
+  padding-bottom: 40px;
+
+  .banner-swiper {
+    height: 500px; // 增加banner高度，更有沉浸感
+    position: relative;
+
+    .banner-img {
+      width: 100%;
+      height: 100%;
+    }
+
+    .banner-mask {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 200px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.4));
+    }
+  }
+
+  .search-card {
+    position: relative;
+    top: -60px; // 核心：让卡片悬浮在 Banner 上
+    margin: 0 32px;
+    background: #FFFFFF;
+    border-radius: 32px; // 大圆角
+    padding: 40px 32px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08); // 柔和的高级阴影
+
+    .card-row {
+      margin-bottom: 40px;
+    }
+
+    .location-row {
+      display: flex;
+      align-items: center;
+      background: #F8F9FC;
+      border-radius: 16px;
+      padding: 24px;
+
+      .location-box {
+        display: flex;
+        flex-direction: column;
+        width: 160px;
+        
+        .city-name { font-size: 32px; font-weight: bold; color: #111; margin-bottom: 8px;}
+        .location-icon { font-size: 20px; color: #0052D9; font-weight: 500;}
+      }
+
+      .divider {
+        width: 2px;
+        height: 48px;
+        background: #E4E7ED;
+        margin: 0 24px;
+      }
+
+      .keyword-input {
+        flex: 1;
+        font-size: 28px;
+        color: #333;
+      }
+      .placeholder-style { color: #A0AEC0; }
+    }
+
+    .date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+
+      .date-block {
+        display: flex;
+        flex-direction: column;
+        
+        .date-label { font-size: 24px; color: #888; margin-bottom: 8px; }
+        .date-value { font-size: 44px; font-weight: 800; color: #111; }
+        &.text-right { align-items: flex-end; }
+      }
+
+      .night-badge {
+        background: #F0F4FF;
+        color: #0052D9;
+        font-size: 22px;
+        padding: 6px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 40px;
+
+      .tag-pill {
+        background: #F5F7FA;
+        color: #666;
+        font-size: 24px;
+        padding: 12px 24px;
+        border-radius: 30px;
+        transition: all 0.2s;
+
+        &.active {
+          background: #0052D9;
+          color: #FFF;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .search-btn {
+      background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
+      color: #FFF;
+      font-size: 32px;
+      font-weight: bold;
+      border-radius: 24px;
+      height: 96px;
+      line-height: 96px;
+      box-shadow: 0 12px 24px rgba(0, 82, 217, 0.3); // 按钮发光阴影
+      
+      &::after { border: none; }
+      &:active { opacity: 0.9; transform: scale(0.98); } // 点击动效
+    }
+  }
+}

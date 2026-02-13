@@ -1,0 +1,161 @@
+.city-picker-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #F5F7FA;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  animation: slideUp 0.3s ease-out;
+
+  .header {
+    height: 100px;
+    background: #FFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-bottom: 2px solid #F0F2F5;
+
+    .title { font-size: 34px; font-weight: bold; color: #111; }
+    .close-btn { 
+      position: absolute; 
+      left: 32px; 
+      font-size: 40px; 
+      color: #333; 
+      padding: 10px;
+    }
+  }
+
+  .city-scroll-view {
+    flex: 1;
+    padding: 0 48px 40px 32px; // 右侧增加 padding 给导航条留出空间
+    height: calc(100vh - 100px);
+    box-sizing: border-box;
+    height: 100%;
+  }
+
+  .section {
+    margin-top: 40px;
+
+    .section-title {
+      font-size: 28px;
+      color: #999;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .city-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+
+      .city-item {
+        width: calc(33.33% - 14px);
+        height: 80px;
+        background: #FFF;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 28px;
+        color: #333;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+
+        &.current {
+          background: #E6F0FF;
+          color: #0052D9;
+          font-weight: bold;
+          .icon-location { font-size: 24px; margin-right: 8px;}
+        }
+
+        &:active { opacity: 0.7; }
+      }
+    }
+  }
+
+  .letter-group {
+    margin-top: 24px;
+    background: #FFF;
+    border-radius: 20px;
+    overflow: hidden;
+
+    .letter-title {
+      background: #F0F2F5;
+      padding: 12px 32px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #666;
+    }
+
+    .letter-cities {
+      .list-city-item {
+        padding: 32px;
+        font-size: 30px;
+        color: #333;
+        border-bottom: 2px solid #F0F2F5;
+
+        &:last-child { border-bottom: none; }
+        &:active { background: #F8F9FC; }
+      }
+    }
+  }
+
+  /* --- 新增：右侧字母导航条样式 --- */
+  .alphabet-sidebar {
+    position: absolute;
+    right: 12px;
+    top: 55%; // 垂直居中稍微偏下一点
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1010;
+
+    .alphabet-item {
+      font-size: 20px;
+      color: #0052D9; // 品牌蓝
+      padding: 4px 12px;
+      margin-bottom: 4px;
+      border-radius: 20px;
+      font-weight: bold;
+      transition: all 0.2s;
+
+      &.active {
+        background: #0052D9;
+        color: #FFF;
+      }
+    }
+  }
+
+  /* --- 新增：屏幕中央点击字母时的放大提示气泡 --- */
+  .letter-toast {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #FFF;
+    font-size: 60px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 24px;
+    z-index: 1020;
+    pointer-events: none; // 防止挡住底层点击
+    animation: fadeIn 0.2s;
+  }
+}
+
+@keyframes slideUp { 
+  from { transform: translateY(100%); } 
+  to { transform: translateY(0); } 
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
