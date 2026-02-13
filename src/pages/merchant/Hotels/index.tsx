@@ -108,12 +108,13 @@ const UserHotelsPage: React.FC = () => {
   ];
 
   const renderDiscount = (discount: any) => {
-    if (discount.type === 'discount') {
-      return `${discount.name}: 打 ${discount.value * 10} 折 (${
+    console.log(discount)
+    if (discount.type === 'percentOff') {
+      return `${discount.title}: 打 ${discount.value * 10} 折 (${
         discount.description || ''
       })`;
     }
-    return `${discount.name}: 立减 ${discount.value} 元 (${
+    return `${discount.title}: 立减 ${discount.value} 元 (${
       discount.description || ''
     })`;
   };

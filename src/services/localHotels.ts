@@ -12,8 +12,8 @@ export type RoomType = { name: string; basePriceCents: number };
 
 export type DiscountScenario = {
   id: string;
-  name: string;
-  type: 'discount' | 'reduction';
+  title: string;
+  type: 'persentOff' | 'amountOffCents';
   value: number;
   description?: string;
 };
@@ -76,11 +76,12 @@ function normalizeRoomTypes(value: any): RoomType[] {
 
 function normalizeDiscounts(value: any): DiscountScenario[] | undefined {
   if (!Array.isArray(value)) return undefined;
+  console.log("value", value)
   return value.map((item, index) => ({
     id: String(item?.id || `discount_${index}`),
-    name: item?.name || '',
-    type: item?.type === 'reduction' ? 'reduction' : 'discount',
-    value: Number(item?.value ?? 0),
+    title: item?.title,
+    type: item?.type ,
+    value: item?.type ==="percentOff"? Number(item?.percentOff): Number(item?.amountOffCents),
     description: item?.description || '',
   }));
 }
