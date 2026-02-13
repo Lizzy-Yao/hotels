@@ -288,9 +288,16 @@ router.get(
           },
         }),
       ]);
-      console.log(items)
+      // console.log(items)
+      const formattedItems = items.map(item => {
+        const newItem = { ...item };
+        if (newItem.openDate) {
+          newItem.openDate = format(new Date(newItem.openDate), 'yyyy-MM-dd');
+        }
+        return newItem;
+      });
       
-      res.json({ page: p, pageSize: ps, total, items });
+      res.json({ page: p, pageSize: ps, total, items:formattedItems });
     } catch (err) {
       next(err);
     }
