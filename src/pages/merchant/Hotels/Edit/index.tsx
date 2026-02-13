@@ -148,7 +148,7 @@ export default function HotelEditPage() {
             >
               <ProForm.Group>
                 <ProFormText
-                  name="name"
+                  name="title"
                   label="活动名称"
                   placeholder="如：节日特惠"
                   rules={[{ required: true }]}
@@ -158,8 +158,8 @@ export default function HotelEditPage() {
                   name="type"
                   label="类型"
                   valueEnum={{
-                    discount: '打折',
-                    reduction: '满减/直减',
+                    percentOff: '打折',
+                    amountOffCents: '满减/直减',
                   }}
                   rules={[{ required: true }]}
                   width="xs"
