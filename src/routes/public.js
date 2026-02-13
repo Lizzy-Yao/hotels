@@ -57,7 +57,7 @@ router.get("/hotels/:id", async (req, res, next) => {
   try {
     const hotel = await prisma.hotel.findUnique({
       where: { id: req.params.id },
-      include: { roomTypes: true, nearbyPlaces: true, promotions: true }
+      include: { roomTypes: true, nearbyPlaces: true, discounts: true }
     });
 
     if (!hotel || hotel.status !== "PUBLISHED") {

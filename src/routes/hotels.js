@@ -22,14 +22,15 @@ const nearbySchema = z.object({
   address: z.string().optional()
 });
 
-const promotionSchema = z.object({
-  type: z.enum(["percentOff", "PACKAGE_MINUS"]),
+const discountschema = z.object({
+  type: z.enum(["percentOff", "amountOffCents"]),
   title: z.string().min(1),
   description: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-  percentOff: z.number().int().optional(),        // 80 表示 8 折
-  amountOffCents: z.number().int().optional(),  // 套餐立减金额
+  // percentOff: z.number().int().optional(),        // 80 表示 8 折
+  // amountOffCents: z.number().int().optional(),  // 套餐立减金额
+  value: z.any().optional(),
   conditionsJson: z.any().optional(),
   isActive: z.boolean().optional()
 });
@@ -45,13 +46,14 @@ const hotelUpsertSchema = z.object({
   currency: z.string().optional(),
   roomTypes: z.array(roomTypeSchema).optional(),
   nearbyPlaces: z.array(nearbySchema).optional(),
-  promotions: z.array(promotionSchema).optional()
+  discounts: z.array(discountschema).optional()
 });
 
 // 创建酒店（DRAFT）
 router.post("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) => {
   try {
     const body = hotelUpsertSchema.parse(req.body);
+    // console.log("after parse:", JSON.stringify(body.discounts, null, 2));
 
     const hotel = await prisma.hotel.create({
       data: {
@@ -83,24 +85,25 @@ router.post("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) 
             address: n.address
           }))
         } : undefined,
-        promotions: body.promotions ? {
-          create: body.promotions.map(p => ({
+        discounts: body.discounts ? {
+          create: body.discounts.map(p => ({
             type: p.type,
             title: p.title,
             description: p.description,
             startDate: p.startDate ? new Date(p.startDate) : null,
             endDate: p.endDate ? new Date(p.endDate) : null,
-            percentOff: p.percentOff,
-            amountOffCents: p.amountOffCents,
+            percentOff: p.type == "percentOff" ? p.value: null,
+            amountOffCents: p.type == "amountOffCents" ? p.value: null,
             conditionsJson: p.conditionsJson,
             isActive: p.isActive ?? true
           }))
         } : undefined,
+        
         auditLogs: {
           create: { operatorId: req.user.id, action: "UPDATE", note: "create draft" }
         }
       },
-      include: { roomTypes: true, nearbyPlaces: true, promotions: true }
+      include: { roomTypes: true, nearbyPlaces: true, discounts: true }
     });
 
     // 实时推送给该商户（保存后端侧实时更新）
@@ -166,8 +169,8 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
               address: n.address
             }))
           } : undefined,
-          promotions: body.promotions ? {
-            create: body.promotions.map(p => ({
+          discounts: body.discounts ? {
+            create: body.discounts.map(p => ({
               type: p.type,
               title: p.title,
               description: p.description,
@@ -180,7 +183,7 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
             }))
           } : undefined
         },
-        include: { roomTypes: true, nearbyPlaces: true, promotions: true }
+        include: { roomTypes: true, nearbyPlaces: true, discounts: true }
       });
 
       return updated;
@@ -267,8 +270,8 @@ router.get(
               orderBy: { basePriceCents: "asc" },
             },
 
-            // ✅ 优惠活动：从 promotions 映射到 discounts
-            promotions: {
+            // ✅ 优惠活动：从 discounts 映射到 discounts
+            discounts: {
               select: {
                 id: true,
                 type: true,
@@ -285,21 +288,9 @@ router.get(
           },
         }),
       ]);
-
-      const mappedItems = items.map((h) => {
-        const discounts = (h.promotions || [])
-          .filter(isPromotionEffective)
-          .map(mapPromotionToDiscount);
-
-        // 把 promotions 移除，换成 discounts 字段名
-        const { promotions, ...rest } = h;
-        return {
-          ...rest,
-          discounts,
-        };
-      });
-
-      res.json({ page: p, pageSize: ps, total, items: mappedItems });
+      console.log(items)
+      
+      res.json({ page: p, pageSize: ps, total, items });
     } catch (err) {
       next(err);
     }
@@ -315,7 +306,7 @@ router.get("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
 
     const hotel = await prisma.hotel.findUnique({
       where: { id: hotelId },
-      include: { roomTypes: true, nearbyPlaces: true, promotions: true }
+      include: { roomTypes: true, nearbyPlaces: true, discounts: true }
     });
 
     if (!hotel) return res.status(404).json({ message: "酒店不存在" });

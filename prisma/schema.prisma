@@ -29,7 +29,7 @@ enum NearbyType {
 
 enum PromotionType {
   percentOff
-  PACKAGE_MINUS
+  amountOffCents
 }
 
 enum AuditAction {
@@ -80,7 +80,7 @@ model Hotel {
 
   roomTypes        RoomType[]
   nearbyPlaces     NearbyPlace[]
-  promotions       Promotion[]
+  discounts       Promotion[]
   auditLogs        HotelAuditLog[]
 }
 
@@ -129,7 +129,7 @@ model Promotion {
   startDate      DateTime?
   endDate        DateTime?
 
-  percentOff     Int?
+  percentOff     Float?
   amountOffCents Int?
   conditionsJson Json?
   isActive       Boolean       @default(true)
