@@ -76,12 +76,15 @@ function normalizeRoomTypes(value: any): RoomType[] {
 
 function normalizeDiscounts(value: any): DiscountScenario[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  console.log("value", value)
+  console.log('value', value);
   return value.map((item, index) => ({
     id: String(item?.id || `discount_${index}`),
     title: item?.title,
-    type: item?.type ,
-    value: item?.type ==="percentOff"? Number(item?.percentOff): Number(item?.amountOffCents),
+    type: item?.type,
+    value:
+      item?.type === 'percentOff'
+        ? Number(item?.percentOff)
+        : Number(item?.amountOffCents),
     description: item?.description || '',
   }));
 }
@@ -89,7 +92,13 @@ function normalizeDiscounts(value: any): DiscountScenario[] | undefined {
 function normalizeHotel(raw: AnyObject): Hotel {
   return {
     id: String(raw?.id || raw?._id || ''),
-    owner: String(raw?.owner || raw?.merchant_id || raw?.merchant?.username || raw?.merchantId || ''),
+    owner: String(
+      raw?.owner ||
+        raw?.merchant_id ||
+        raw?.merchant?.username ||
+        raw?.merchantId ||
+        '',
+    ),
     nameCn: String(raw?.nameCn || raw?.name_cn || raw?.name || ''),
     nameEn: String(raw?.nameEn || raw?.name_en || ''),
     address: String(raw?.address || ''),
@@ -97,8 +106,7 @@ function normalizeHotel(raw: AnyObject): Hotel {
     roomTypes: normalizeRoomTypes(raw?.roomTypes || raw?.room_types),
     openDate: String(raw?.openDate || raw?.opening_date || ''),
     status: normalizeStatus(raw?.status),
-    nearbyPlaces:
-      raw?.nearbyPlaces || raw?.nearby_attractions || undefined,
+    nearbyPlaces: raw?.nearbyPlaces || raw?.nearby_attractions || undefined,
     transportation: raw?.transportation || undefined,
     nearbyMalls: raw?.nearbyMalls || raw?.nearby_malls || undefined,
     discounts: normalizeDiscounts(raw?.discounts),
@@ -173,9 +181,8 @@ export async function getHotel(id: string) {
 
   // console.log('接口原始返回:', response);
 
-  return response; 
+  return response;
 }
-
 
 export async function upsertHotel(input: {
   id?: string;
@@ -257,7 +264,7 @@ export async function adminApprove(params: { id: string }) {
   try {
     const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
       method: 'POST',
-      data: { result: "APPROVE" },
+      data: { result: 'APPROVE' },
     });
     return normalizeHotel(extractData<AnyObject>(response) || {});
   } catch (error) {
@@ -269,7 +276,7 @@ export async function adminReject(params: { id: string; reason: string }) {
   try {
     const response = await request(`/api/v1/admin/hotels/${params.id}/review`, {
       method: 'POST',
-      data: { result: "REJECT", reason: params.reason },
+      data: { result: 'REJECT', reason: params.reason },
     });
     return normalizeHotel(extractData<AnyObject>(response) || {});
   } catch (error) {

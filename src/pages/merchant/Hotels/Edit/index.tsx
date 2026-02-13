@@ -158,20 +158,33 @@ export default function HotelEditPage() {
   const owner = useMemo(() => initialState?.currentUser?.username || '', [initialState]);
 
   const handleFinish = async (values: any) => {
-    console.log("开始提交");
-  
     try {
-      const payload = { ...values };
-      const res = await upsertHotel(payload);
-
-      message.success("保存成功");
-      history.push("/user-center/hotels");
-
-    } catch (e) {
-      console.log("发生异常:", e);
-      message.error("失败");
+      // 1) 兼容 openDate：可能是 dayjs，也可能已经是 string
+      const openDate =
+        values.openDate && typeof values.openDate?.format === 'function'
+          ? values.openDate.format('YYYY-MM-DD')
+          : values.openDate;
+  
+      // 2) 关键：编辑时必须把 id 传给 upsertHotel
+      const payload = {
+        ...values,
+        openDate,
+        owner,
+        id: isEdit ? id : undefined, // ⭐ 这一行决定 PUT 还是 POST
+      };
+  
+      await upsertHotel(payload);
+  
+      message.success('保存成功');
+      history.push('/user-center/hotels');
+      return true;
+    } catch (e: any) {
+      console.log('发生异常:', e);
+      message.error(e?.message || '失败');
+      return false;
     }
   };
+  
   
   
 

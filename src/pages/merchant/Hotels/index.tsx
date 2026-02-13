@@ -109,7 +109,7 @@ const UserHotelsPage: React.FC = () => {
   ];
 
   const renderDiscount = (discount: any) => {
-    console.log(discount)
+    console.log(discount);
     if (discount.type === 'percentOff') {
       return `${discount.title}: 打 ${discount.value * 10} 折 (${
         discount.description || ''
@@ -167,11 +167,13 @@ const UserHotelsPage: React.FC = () => {
       >
         {current ? (
           <>
-           <Typography.Paragraph type="secondary">
-            {statusTag(current.status)}
-            {current.rejectReason ? `  驳回原因：${current.rejectReason}` : ''}
-            {current.auditNote ? `  审核意见：${current.auditNote}` : ''}
-          </Typography.Paragraph>
+            <Typography.Paragraph type="secondary">
+              {statusTag(current.status)}
+              {current.rejectReason
+                ? `  驳回原因：${current.rejectReason}`
+                : ''}
+              {current.auditNote ? `  审核意见：${current.auditNote}` : ''}
+            </Typography.Paragraph>
             <ProDescriptions<Hotel>
               column={2}
               dataSource={current}
@@ -187,42 +189,52 @@ const UserHotelsPage: React.FC = () => {
                   title: '交通信息',
                   span: 2,
                   render: (_, r) => {
-                    const list = r.nearbyPlaces?.filter(p => p.type === 'TRANSPORT')
+                    const list = r.nearbyPlaces?.filter(
+                      (p) => p.type === 'TRANSPORT',
+                    );
                     return list?.length
-                    ? list.map(p => p.name).join('、')
-                    : '暂无数据'
-                    },
+                      ? list.map((p) => p.name).join('、')
+                      : '暂无数据';
+                  },
                 },
                 {
                   title: '周边景点',
                   span: 2,
                   render: (_, r) => {
-                    const list = r.nearbyPlaces?.filter(p => p.type === 'ATTRACTION')
+                    const list = r.nearbyPlaces?.filter(
+                      (p) => p.type === 'ATTRACTION',
+                    );
                     return list?.length ? (
-                    <Space size={4} wrap>
-                    {list.map(p => (
-                    <Tag key={p.id} color="blue">
-                    {p.name}
-                    </Tag>
-                    ))}
-                    </Space>
-                    ) : '暂无数据'
+                      <Space size={4} wrap>
+                        {list.map((p) => (
+                          <Tag key={p.id} color="blue">
+                            {p.name}
+                          </Tag>
+                        ))}
+                      </Space>
+                    ) : (
+                      '暂无数据'
+                    );
                   },
                 },
                 {
                   title: '周边商场',
                   span: 2,
                   render: (_, r) => {
-                    const list = r.nearbyPlaces?.filter(p => p.type === 'MALL')
+                    const list = r.nearbyPlaces?.filter(
+                      (p) => p.type === 'MALL',
+                    );
                     return list?.length ? (
-                    <Space size={4} wrap>
-                    {list.map(p => (
-                    <Tag key={p.id} color="cyan">
-                    {p.name}
-                    </Tag>
-                    ))}
-                    </Space>
-                    ) : '暂无数据'
+                      <Space size={4} wrap>
+                        {list.map((p) => (
+                          <Tag key={p.id} color="cyan">
+                            {p.name}
+                          </Tag>
+                        ))}
+                      </Space>
+                    ) : (
+                      '暂无数据'
+                    );
                   },
                 },
                 {
@@ -251,7 +263,6 @@ const UserHotelsPage: React.FC = () => {
                       .map((x) => `${x.name}：${x.basePriceCents} 元`)
                       .join('；'),
                 },
-
               ]}
             />
           </>
