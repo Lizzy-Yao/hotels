@@ -166,16 +166,15 @@ export async function listAdminHotels(params?: {
 }
 
 export async function getHotel(id: string) {
-  try {
-    const response = await request(`/api/v1/hotels/${id}`, {
-      method: 'GET',
-    });
-    const data = extractData<AnyObject>(response);
-    return normalizeHotel(data || {});
-  } catch (error) {
-    throw parseError(error, '获取酒店详情失败');
-  }
+  const response = await request(`/api/v1/hotels/${id}`, {
+    method: 'GET',
+  });
+
+  // console.log('接口原始返回:', response);
+
+  return response; 
 }
+
 
 export async function upsertHotel(input: {
   id?: string;

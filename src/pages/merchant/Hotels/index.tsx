@@ -122,7 +122,7 @@ const UserHotelsPage: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '酒店信息（用户）',
+        title: '酒店信息',
         extra: [
           <Button
             key="new"

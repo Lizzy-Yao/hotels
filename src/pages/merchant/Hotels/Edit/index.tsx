@@ -11,53 +11,221 @@ import {
 } from '@ant-design/pro-components';
 import { history, useModel, useParams } from '@umijs/max';
 import { Card, message } from 'antd';
-import { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import { useMemo, useState } from 'react';
+
+type DiscountType = 'percentOff' | 'amountOffCents';
+
+type DiscountFormItem = {
+  id?: string;
+  title: string;
+  type: DiscountType;
+  value: number;
+  description?: string;
+};
+
+type RoomTypeFormItem = {
+  id?: string;
+  name: string;
+  basePriceCents: number;
+};
+
+type HotelFormValues = Omit<
+  Partial<Hotel>,
+  'openDate' | 'nearbyPlaces' | 'discounts' | 'roomTypes'
+> & {
+  openDate?: any; // dayjs
+  nearbyPlaces?: string[];
+  nearbyMalls?: string[];
+  transportation?: string;
+  discounts?: DiscountFormItem[];
+  roomTypes?: RoomTypeFormItem[];
+};
+
+// 接口 hotel -> 表单回填值
+function toFormValues(hotel: any): HotelFormValues {
+  const nearby = Array.isArray(hotel?.nearbyPlaces) ? hotel.nearbyPlaces : [];
+
+  // DatePicker 建议用 YYYY-MM-DD，避免时区导致“前一天”
+  const openDateStr =
+    typeof hotel?.openDate === 'string' ? hotel.openDate.slice(0, 10) : undefined;
+
+  return {
+    ...hotel,
+
+    openDate: openDateStr ? dayjs(openDateStr) : undefined,
+
+    nearbyPlaces: nearby
+      .filter((x: any) => x?.type === 'ATTRACTION')
+      .map((x: any) => x?.name)
+      .filter(Boolean),
+
+    nearbyMalls: nearby
+      .filter((x: any) => x?.type === 'MALL')
+      .map((x: any) => x?.name)
+      .filter(Boolean),
+
+    transportation: nearby.find((x: any) => x?.type === 'TRANSPORT')?.name,
+
+    discounts: (hotel?.discounts ?? []).map((d: any) => ({
+      id: d.id,
+      title: d.title,
+      type: d.type as DiscountType,
+      value: d.type === 'percentOff' ? d.percentOff : d.amountOffCents,
+      description: d.description,
+    })),
+
+    roomTypes: (hotel?.roomTypes ?? []).map((rt: any) => ({
+      id: rt.id,
+      name: rt.name,
+      basePriceCents: rt.basePriceCents,
+    })),
+  };
+}
+
+// 表单值 -> 提交 payload（按你后端字段还原）
+function toSubmitPayload(values: any, existingHotel: any) {
+  const openDate = values?.openDate ? values.openDate.format('YYYY-MM-DD') : undefined;
+
+  const nearbyPlaces = [
+    ...(values?.nearbyPlaces ?? []).map((name: string) => ({
+      type: 'ATTRACTION',
+      name,
+    })),
+    ...(values?.nearbyMalls ?? []).map((name: string) => ({
+      type: 'MALL',
+      name,
+    })),
+    ...(values?.transportation
+      ? [
+          {
+            type: 'TRANSPORT',
+            name: values.transportation,
+          },
+        ]
+      : []),
+  ];
+
+  const discounts = (values?.discounts ?? []).map((d: any) => ({
+    id: d.id,
+    type: d.type,
+    title: d.title,
+    description: d.description,
+    percentOff: d.type === 'percentOff' ? d.value : null,
+    amountOffCents: d.type === 'amountOffCents' ? d.value : null,
+  }));
+
+  const roomTypes = (values?.roomTypes ?? []).map((rt: any) => ({
+    id: rt.id,
+    name: rt.name,
+    basePriceCents: rt.basePriceCents,
+  }));
+
+  // 剔除表单的“辅助字段”
+  const {
+    nearbyPlaces: _np,
+    nearbyMalls: _nm,
+    transportation: _t,
+    discounts: _d,
+    roomTypes: _rt,
+    ...rest
+  } = values;
+
+  return {
+    ...existingHotel,
+    ...rest,
+    openDate,
+    nearbyPlaces,
+    discounts,
+    roomTypes,
+  };
+}
 
 export default function HotelEditPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const { initialState } = useModel('@@initialState');
-  const [initialValues, setInitialValues] = useState<Partial<Hotel>>({});
+
+  const [rawHotel, setRawHotel] = useState<any>(null);
   const [form] = ProForm.useForm();
 
-  useEffect(() => {
-    if (isEdit && id) {
-      getHotel(id)
-        .then((data) => {
-          setInitialValues(data);
-          form.setFieldsValue(data);
-        })
-        .catch((e: any) => {
-          message.error(e?.message || '未找到该酒店');
-          history.push('/user-center/hotels');
-        });
-    }
-  }, [id, isEdit, form]);
+  const owner = useMemo(() => initialState?.currentUser?.username || '', [initialState]);
 
   const handleFinish = async (values: any) => {
     try {
+      const payload = toSubmitPayload(values, rawHotel);
+
       await upsertHotel({
-        ...values,
+        ...payload,
         id: isEdit ? id : undefined,
-        owner: initialState?.currentUser?.username || '',
+        owner,
       });
+
       message.success('保存成功');
       history.push('/user-center/hotels');
     } catch (e: any) {
-      message.error(e.message);
+      message.error(e?.message || '保存失败');
     }
   };
 
   return (
     <PageContainer title={isEdit ? '编辑酒店' : '新建酒店'}>
       <Card>
-        <ProForm
+      <ProForm
           form={form}
-          initialValues={initialValues}
-          onFinish={handleFinish}
           layout="vertical"
+          request={async () => {
+            if (!id) return {};
+
+            const data = await getHotel(id);
+
+            console.log('真实数据:', data);
+
+            // 这里不要猜结构，直接判断
+            const hotel = data.hotel ? data.hotel : data;
+
+            if (!hotel) return {};
+
+            return {
+              nameCn: hotel.nameCn,
+              nameEn: hotel.nameEn,
+              address: hotel.address,
+              starRating: hotel.starRating,
+              openDate: hotel.openDate
+                ? dayjs(hotel.openDate.slice(0, 10))
+                : undefined,
+
+              roomTypes: (hotel.roomTypes || []).map((r: any) => ({
+                name: r.name,
+                basePriceCents: r.basePriceCents,
+              })),
+
+              nearbyPlaces: (hotel.nearbyPlaces || [])
+                .filter((x: any) => x.type === 'ATTRACTION')
+                .map((x: any) => x.name),
+
+              nearbyMalls: (hotel.nearbyPlaces || [])
+                .filter((x: any) => x.type === 'MALL')
+                .map((x: any) => x.name),
+
+              transportation: (hotel.nearbyPlaces || [])
+                .find((x: any) => x.type === 'TRANSPORT')
+                ?.name,
+
+              discounts: (hotel.discounts || []).map((d: any) => ({
+                title: d.title,
+                type: d.type,
+                value:
+                  d.type === 'percentOff'
+                    ? d.percentOff
+                    : d.amountOffCents,
+                description: d.description,
+              })),
+            };
+          }}
+          onFinish={handleFinish}
         >
-          {/* --- 必填基础信息 --- */}
+
           <ProForm.Group title="基础信息">
             <ProFormText
               name="nameCn"
@@ -91,15 +259,9 @@ export default function HotelEditPage() {
               rules={[{ required: true }]}
               width="xs"
             />
-            <ProFormDatePicker
-              name="openDate"
-              label="开业时间"
-              rules={[{ required: true }]}
-              width="md"
-            />
+            <ProFormDatePicker name="openDate" label="开业时间" rules={[{ required: true }]} width="md" />
           </ProForm.Group>
 
-          {/* --- 新增：可选维度信息 --- */}
           <ProForm.Group title="周边与交通（选填）">
             <ProFormSelect
               name="nearbyPlaces"
@@ -125,7 +287,6 @@ export default function HotelEditPage() {
             />
           </ProForm.Group>
 
-          {/* --- 新增：优惠活动 --- */}
           <ProForm.Group title="营销与优惠（选填）" style={{ width: '100%' }}>
             <ProFormList
               name="discounts"
@@ -135,13 +296,7 @@ export default function HotelEditPage() {
                 creatorButtonText: '新增优惠活动',
               }}
               itemRender={({ listDom, action }, { index }) => (
-                <Card
-                  bordered
-                  style={{ marginBottom: 8 }}
-                  size="small"
-                  extra={action}
-                  title={`优惠活动 ${index + 1}`}
-                >
+                <Card bordered style={{ marginBottom: 8 }} size="small" extra={action} title={`优惠活动 ${index + 1}`}>
                   {listDom}
                 </Card>
               )}
@@ -172,16 +327,10 @@ export default function HotelEditPage() {
                   width="xs"
                   fieldProps={{ precision: 2 }}
                 />
-                <ProFormText
-                  name="description"
-                  label="详细描述"
-                  placeholder="活动规则描述"
-                  width="md"
-                />
+                <ProFormText name="description" label="详细描述" placeholder="活动规则描述" width="md" />
               </ProForm.Group>
             </ProFormList>
           </ProForm.Group>
-          {/* --------------------------- */}
 
           <ProForm.Group title="房型设置">
             <ProFormList
@@ -190,27 +339,15 @@ export default function HotelEditPage() {
               rules={[
                 {
                   validator: async (_, value) => {
-                    if (!value || value.length < 1) {
-                      throw new Error('至少需要填写一个房型');
-                    }
+                    if (!value || value.length < 1) throw new Error('至少需要填写一个房型');
                   },
                 },
               ]}
-              creatorButtonProps={{
-                creatorButtonText: '添加新房型',
-              }}
+              creatorButtonProps={{ creatorButtonText: '添加新房型' }}
             >
               <ProForm.Group>
-                <ProFormText
-                  name="name"
-                  label="房型名称"
-                  rules={[{ required: true }]}
-                />
-                <ProFormDigit
-                  name="basePriceCents"
-                  label="价格(元)"
-                  rules={[{ required: true }]}
-                />
+                <ProFormText name="name" label="房型名称" rules={[{ required: true }]} />
+                <ProFormDigit name="basePriceCents" label="价格(元)" rules={[{ required: true }]} />
               </ProForm.Group>
             </ProFormList>
           </ProForm.Group>
