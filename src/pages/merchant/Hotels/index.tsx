@@ -169,9 +169,9 @@ const UserHotelsPage: React.FC = () => {
           <>
             <Typography.Paragraph type="secondary">
               {statusTag(current.status)}
-              {current.rejectReason
+              {current.rejectReason !== null && current.rejectReason !== undefined && current.rejectReason !== 'null' && current.rejectReason
                 ? `  驳回原因：${current.rejectReason}`
-                : ''}
+                :  ''}
               {current.auditNote ? `  审核意见：${current.auditNote}` : ''}
             </Typography.Paragraph>
             <ProDescriptions<Hotel>
