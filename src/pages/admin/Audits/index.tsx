@@ -104,40 +104,7 @@ const AdminAuditsPage: React.FC = () => {
             >
               驳回
             </a>
-            <a
-              onClick={async () => {
-                try {
-                  await adminPublish({ id: record.id });
-                  message.success('已发布');
-                  actionRef.current?.reload();
-                } catch (e: any) {
-                  message.error(e?.message || '操作失败');
-                }
-              }}
-              style={{
-                pointerEvents: canPublish ? 'auto' : 'none',
-                opacity: canPublish ? 1 : 0.4,
-              }}
-            >
-              发布
-            </a>
-            <a
-              onClick={async () => {
-                try {
-                  await adminOffline({ id: record.id });
-                  message.success('已下线');
-                  actionRef.current?.reload();
-                } catch (e: any) {
-                  message.error(e?.message || '操作失败');
-                }
-              }}
-              style={{
-                pointerEvents: canOffline ? 'auto' : 'none',
-                opacity: canOffline ? 1 : 0.4,
-              }}
-            >
-              下线
-            </a>
+            
           </Space>
         );
       },
@@ -155,7 +122,8 @@ const AdminAuditsPage: React.FC = () => {
             const result = await listAdminHotels({
               page: params.current,
               pageSize: params.pageSize,
-              status: params.status as string,
+              // status: params.status as string,
+              status: "SUBMITTED"
             });
             return { data: result.list, success: true, total: result.total };
           } catch (e: any) {
