@@ -1,19 +1,31 @@
 import { View, Text, Input, Button, Swiper, SwiperItem, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Calendar from '../../components/Calendar'
 import CityPicker from '../../components/CityPicker'
-import { searchHotels, type HotelItem } from '../../services/hotel'
 import './index.scss'
 
-import banner1 from '../../assets/images/banner1.jpg'
-import banner2 from '../../assets/images/banner2.jpg'
-
+/** 把 Date 转成 YYYY-MM-DD */
 const formatDate = (date: Date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+/** 用于顶部日期展示：03月01日 */
+const formatDateShow = (dateStr: string) => {
+  const parts = (dateStr || '').split('-')
+  if (parts.length < 3) return dateStr
+  return `${parts[1]}月${parts[2]}日`
+}
+
+/** 计算入住晚数 */
+const calcNights = (checkIn: string, checkOut: string) => {
+  const start = new Date(checkIn).getTime()
+  const end = new Date(checkOut).getTime()
+  const nights = Math.round((end - start) / (1000 * 60 * 60 * 24))
+  return nights > 0 ? nights : 1
 }
 
 export default function Index () {
@@ -25,125 +37,129 @@ export default function Index () {
   const [keyword, setKeyword] = useState('')
   const [checkInDate, setCheckInDate] = useState(formatDate(today))
   const [checkOutDate, setCheckOutDate] = useState(formatDate(tomorrow))
+
+  // 快捷标签（可多选）
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [hotelList, setHotelList] = useState<HotelItem[]>([])
-  const [resultTotal, setResultTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
-  
-  // 日历控制状态
+
+  // 基础筛选：星级/价格（满足“筛选条件(酒店星级或价格等)”要求）
+  const [starFilter, setStarFilter] = useState<number | 0>(0) // 0=不限，3/4/5=指定星级
+  const [priceFilter, setPriceFilter] = useState<'0' | '0-300' | '300-600' | '600+'>('0')
+
+  // 弹窗控制
   const [showCalendar, setShowCalendar] = useState(false)
-
-  const banners = [banner1, banner2]
-  const hotTags = ['免费停车场', '近地铁', '免费洗衣服务', '亲子酒店', '豪华型']
-
   const [showCityPicker, setShowCityPicker] = useState(false)
+
+  // 跳转 loading（避免重复点击）
+  const [navigating, setNavigating] = useState(false)
+
+  const nights = useMemo(() => calcNights(checkInDate, checkOutDate), [checkInDate, checkOutDate])
+
+  const banners = [
+    // 远程占位 Banner：避免你本地 assets 路径不一致导致白屏
+    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80&auto=format&fit=crop'
+  ]
+
+  const hotTags = ['免费停车场', '近地铁', '免费洗衣服务', '亲子酒店', '豪华型']
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
   }
 
-  // 格式化日期显示 (例如: 03月01日)
-  const formatDateShow = (dateStr: string) => {
-    const [, month, day] = dateStr.split('-')
-    return `${month}月${day}日`
-  }
+  /** 首页查询：按要求跳转到列表页展示结果:contentReference[oaicite:3]{index=3} */
+  const handleGoList = async () => {
+    if (navigating) return
 
-  // 计算入住晚数
-  const calcNights = () => {
-    const start = new Date(checkInDate).getTime()
-    const end = new Date(checkOutDate).getTime()
-    return Math.round((end - start) / (1000 * 60 * 60 * 24)) || 1
-  }
+    // 统一把 tags 序列化传递（列表页再 JSON.parse）
+    const qs = [
+      `city=${encodeURIComponent(location)}`,
+      `keyword=${encodeURIComponent(keyword)}`,
+      `checkInDate=${encodeURIComponent(checkInDate)}`,
+      `checkOutDate=${encodeURIComponent(checkOutDate)}`,
+      `tags=${encodeURIComponent(JSON.stringify(selectedTags || []))}`,
+      `star=${encodeURIComponent(String(starFilter))}`,
+      `price=${encodeURIComponent(priceFilter)}`
+    ].join('&')
 
-  const handleSearch = async () => {
-    setLoading(true)
+    setNavigating(true)
     try {
-      const data = await searchHotels({
-        city: location,
-        keyword,
-        checkInDate,
-        checkOutDate,
-        tags: selectedTags
-      })
-      setHotelList(data.list)
-      setResultTotal(data.total)
-      setSearched(true)
-      Taro.showToast({
-        title: `找到 ${data.total} 家酒店`,
-        icon: 'none'
-      })
-    } catch (error) {
-      setHotelList([])
-      setResultTotal(0)
-      setSearched(true)
-      Taro.showToast({
-        title: error instanceof Error ? error.message : '查询失败，请稍后重试',
-        icon: 'none'
-      })
+      await Taro.navigateTo({ url: `/pages/hotel-list/index?${qs}` })
     } finally {
-      setLoading(false)
+      setNavigating(false)
     }
   }
 
-  const handleImageError = (hotelId: string) => {
-    setHotelList(prev => prev.map(item => {
-      if (item.hotelId !== hotelId) return item
-      return {
-        ...item,
-        coverImage: ''
-      }
-    }))
+  /** Banner 点击：优先跳详情；如果你还没做详情页，就先提示 */
+  const handleBannerClick = () => {
+    // 你如果已经有详情页，可改成：Taro.navigateTo({ url: `/pages/hotel-detail/index?hotelId=xxx` })
+    Taro.showToast({ title: '可在此跳转酒店详情页（你完成详情页后再接入）', icon: 'none' })
   }
 
   return (
     <View className='home-page'>
-      {/* 1. 沉浸式顶部 Banner */}
+      {/* 1. 顶部 Banner（点击可跳详情） */}
       <Swiper className='banner-swiper' indicatorDots indicatorActiveColor='#fff' autoplay circular>
         {banners.map((url, index) => (
           <SwiperItem key={index}>
-            <Image src={url} className='banner-img' mode='aspectFill' />
-            <View className='banner-mask'></View> {/* 渐变遮罩增加高级感 */}
+            <Image src={url} className='banner-img' mode='aspectFill' onClick={handleBannerClick} />
+            <View className='banner-mask' />
           </SwiperItem>
         ))}
       </Swiper>
 
       {/* 2. 悬浮搜索卡片 */}
       <View className='search-card'>
-        {/* 位置与搜索 */}
+        {/* 位置与关键词 */}
         <View className='card-row location-row'>
           <View className='location-box' onClick={() => setShowCityPicker(true)}>
             <Text className='city-name'>{location}</Text>
             <Text className='location-icon'>📍 我的位置</Text>
           </View>
-          <View className='divider'></View>
-          <Input 
-            className='keyword-input' 
-            placeholder='地标 / 酒店名' 
+          <View className='divider' />
+          <Input
+            className='keyword-input'
+            placeholder='地标 / 酒店名'
             placeholderClass='placeholder-style'
             value={keyword}
             onInput={(e) => setKeyword(e.detail.value)}
           />
         </View>
 
-        {/* 日期选择区 */}
+        {/* 入住/离店日期 */}
         <View className='card-row date-row' onClick={() => setShowCalendar(true)}>
           <View className='date-block'>
             <Text className='date-label'>入住</Text>
             <Text className='date-value'>{formatDateShow(checkInDate)}</Text>
           </View>
-          <View className='night-badge'>共 {calcNights()} 晚</View>
+          <View className='night-badge'>共 {nights} 晚</View>
           <View className='date-block text-right'>
             <Text className='date-label'>离店</Text>
             <Text className='date-value'>{formatDateShow(checkOutDate)}</Text>
           </View>
         </View>
 
+        {/* 星级/价格筛选（首页核心查询区域的一部分） */}
+        <View className='filters-row'>
+          <View className='filter-group'>
+            <Text className={`filter-pill ${starFilter === 0 ? 'active' : ''}`} onClick={() => setStarFilter(0)}>不限星级</Text>
+            <Text className={`filter-pill ${starFilter === 3 ? 'active' : ''}`} onClick={() => setStarFilter(3)}>3星</Text>
+            <Text className={`filter-pill ${starFilter === 4 ? 'active' : ''}`} onClick={() => setStarFilter(4)}>4星</Text>
+            <Text className={`filter-pill ${starFilter === 5 ? 'active' : ''}`} onClick={() => setStarFilter(5)}>5星</Text>
+          </View>
+
+          <View className='filter-group'>
+            <Text className={`filter-pill ${priceFilter === '0' ? 'active' : ''}`} onClick={() => setPriceFilter('0')}>不限价格</Text>
+            <Text className={`filter-pill ${priceFilter === '0-300' ? 'active' : ''}`} onClick={() => setPriceFilter('0-300')}>¥0-300</Text>
+            <Text className={`filter-pill ${priceFilter === '300-600' ? 'active' : ''}`} onClick={() => setPriceFilter('300-600')}>¥300-600</Text>
+            <Text className={`filter-pill ${priceFilter === '600+' ? 'active' : ''}`} onClick={() => setPriceFilter('600+')}>¥600+</Text>
+          </View>
+        </View>
+
         {/* 快捷标签 */}
         <View className='tags-row'>
           {hotTags.map(tag => (
-            <Text 
-              key={tag} 
+            <Text
+              key={tag}
               className={`tag-pill ${selectedTags.includes(tag) ? 'active' : ''}`}
               onClick={() => toggleTag(tag)}
             >
@@ -152,56 +168,16 @@ export default function Index () {
           ))}
         </View>
 
-        {/* 查询按钮 */}
-        <Button className='search-btn' onClick={handleSearch} loading={loading} disabled={loading}>
-          {loading ? '查询中...' : '查找酒店'}
+        {/* 查询按钮：跳转列表页 */}
+        <Button className='search-btn' onClick={handleGoList} loading={navigating} disabled={navigating}>
+          {navigating ? '正在跳转...' : '查找酒店'}
         </Button>
       </View>
 
-      {searched && (
-        <View className='result-panel'>
-          <View className='result-header'>
-            <Text className='result-title'>酒店结果</Text>
-            <Text className='result-count'>共 {resultTotal} 家</Text>
-          </View>
-          {hotelList.length === 0 && (
-            <View className='empty-result'>暂无符合条件的酒店，请更换筛选条件再试。</View>
-          )}
-          {hotelList.map(item => (
-            <View key={item.hotelId} className='hotel-card'>
-              {item.coverImage ? (
-                <Image
-                  className='hotel-cover'
-                  src={item.coverImage}
-                  mode='aspectFill'
-                  onError={() => handleImageError(item.hotelId)}
-                />
-              ) : (
-                <View className='hotel-cover placeholder'>暂无图片</View>
-              )}
-              <View className='hotel-info'>
-                <Text className='hotel-name'>{item.hotelName}</Text>
-                <Text className='hotel-address'>{item.address}</Text>
-                <View className='hotel-meta'>
-                  <Text className='hotel-score'>{item.score.toFixed(1)} 分</Text>
-                  <Text className='hotel-comment'>{item.commentCount} 条点评</Text>
-                </View>
-                <View className='hotel-tags'>
-                  {item.tags.slice(0, 3).map(tag => (
-                    <Text key={`${item.hotelId}-${tag}`} className='hotel-tag'>{tag}</Text>
-                  ))}
-                </View>
-                <Text className='hotel-price'>¥{item.minPrice} 起</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 日历弹窗组件 */}
-      <Calendar 
-        visible={showCalendar} 
-        onClose={() => setShowCalendar(false)} 
+      {/* 日历弹窗 */}
+      <Calendar
+        visible={showCalendar}
+        onClose={() => setShowCalendar(false)}
         onSelect={(start, end) => {
           setCheckInDate(start)
           setCheckOutDate(end)
@@ -209,9 +185,9 @@ export default function Index () {
         }}
       />
 
-      {/* 城市选择器弹窗组件 */}
-      <CityPicker 
-        visible={showCityPicker} 
+      {/* 城市选择器弹窗 */}
+      <CityPicker
+        visible={showCityPicker}
         currentCity={location}
         onClose={() => setShowCityPicker(false)}
         onSelect={(city) => {

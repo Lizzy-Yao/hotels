@@ -239,3 +239,31 @@
     }
   }
 }
+.filters-row {
+  margin-bottom: 28px;
+
+  .filter-group {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 14px;
+    padding: 8px 0;
+
+    &::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      background: #F3F4F6;
+      color: #374151;
+      font-size: 24px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      flex-shrink: 0;
+
+      &.active {
+        background: #0052D9;
+        color: #ffffff;
+        font-weight: 600;
+      }
+    }
+  }
+}
