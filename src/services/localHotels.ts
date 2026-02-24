@@ -1,12 +1,12 @@
 import { request } from '@umijs/max';
 
 export type HotelStatus =
-  | 'draft'
-  | 'submitted'
-  | 'approved'
-  | 'rejected'
-  | 'published'
-  | 'offline';
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'PUBLISHED'
+  | 'OFFLINE';
 
 export type RoomType = { name: string; basePriceCents: number };
 
@@ -21,6 +21,7 @@ export type DiscountScenario = {
 export type Hotel = {
   id: string;
   owner: string;
+  merchantId: string;
   nameCn: string;
   nameEn: string;
   address: string;

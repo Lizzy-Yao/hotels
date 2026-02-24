@@ -26,17 +26,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 function statusTag(status?: Hotel['status']) {
   switch (status) {
-    case 'draft':
+    case 'DRAFT':
       return <Tag>草稿</Tag>;
-    case 'submitted':
+    case 'SUBMITTED':
       return <Tag color="processing">已提交</Tag>;
-    case 'approved':
+    case 'APPROVED':
       return <Tag color="success">已通过</Tag>;
-    case 'rejected':
+    case 'REJECTED':
       return <Tag color="error">已驳回</Tag>;
-    case 'published':
+    case 'PUBLISHED':
       return <Tag color="gold">已上线</Tag>;
-    case 'offline':
+    case 'OFFLINE':
       return <Tag color="default">已下线</Tag>;
     default:
       return <Tag>未知</Tag>;
@@ -143,7 +143,7 @@ const HotelDetailPage: React.FC = () => {
                         </Typography.Text>
                         <div style={{ marginTop: 10 }}>
                           {statusTag(hotel.status)}
-                          <Tag color="blue">商户：{hotel.owner || '-'}</Tag>
+                          <Tag color="blue">商户ID：{hotel.merchantId || '-'}</Tag>
                         </div>
                       </Col>
                       <Col xs={12} md={4}>
