@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const hotelRoutes = require("./routes/hotels");
 const adminRoutes = require("./routes/admin");
 const publicRoutes = require("./routes/public");
+const userRoutes = require("./routes/user");
 
 const app = express();
 app.use(cors());
@@ -40,6 +41,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/hotels", hotelRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/public", publicRoutes);
+app.use("/api/v1/user", userRoutes);
 
 // 统一错误兜底
 app.use((err, req, res, next) => {
