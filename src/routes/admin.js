@@ -74,7 +74,9 @@ router.get("/hotels/:id", authRequired, roleRequired("ADMIN"), async (req, res, 
     });
 
     if (!hotel) return res.status(404).json({ message: "酒店不存在" });
-
+    if(hotel.openDate) {
+      hotel.openDate = format(new Date(hotel.openDate), "yyyy-MM-dd");
+    }
     res.json({ hotel });
   } catch (err) {
     next(err);
