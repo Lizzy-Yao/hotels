@@ -49,6 +49,23 @@ const hotelUpsertSchema = z.object({
   discounts: z.array(discountschema).optional()
 });
 
+const reviewQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1)
+});
+
+const MOCK_REVIEW_PAGE_SIZE = 20;
+const MOCK_REVIEWS = Array.from({ length: 56 }, (_, index) => {
+  const no = index + 1;
+  return {
+    id: `review_${no}`,
+    userName: `用户${String((no % 18) + 1).padStart(2, "0")}`,
+    rating: 5 - (index % 3),
+    content: `这是第 ${no} 条评价，整体入住体验良好。`,
+    checkInDate: `2026-01-${String((index % 28) + 1).padStart(2, "0")}`,
+    createdAt: `2026-02-${String((index % 20) + 1).padStart(2, "0")}T10:00:00.000Z`
+  };
+});
+
 // 创建酒店（DRAFT）
 router.post("/", authRequired, roleRequired("MERCHANT"), async (req, res, next) => {
   try {
@@ -365,6 +382,34 @@ router.post("/:id/submit", authRequired, roleRequired("MERCHANT"), async (req, r
     io.to("admin").emit("hotel:submitted", { hotelId: updated.id });
 
     res.json({ hotel: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 酒店评价列表（管理员/商户）
+router.get("/:id/reviews", authRequired, async (req, res, next) => {
+  try {
+    if (!["ADMIN", "MERCHANT"].includes(req.user.role)) {
+      return res.status(403).json({ message: "无权限" });
+    }
+
+    const { page } = reviewQuerySchema.parse(req.query);
+    const total = MOCK_REVIEWS.length;
+    const totalPages = Math.ceil(total / MOCK_REVIEW_PAGE_SIZE);
+    const safePage = Math.min(page, Math.max(1, totalPages));
+    const start = (safePage - 1) * MOCK_REVIEW_PAGE_SIZE;
+    const items = MOCK_REVIEWS.slice(start, start + MOCK_REVIEW_PAGE_SIZE);
+
+    return res.json({
+      hotelId: req.params.id,
+      starRating: 4.6,
+      page: safePage,
+      pageSize: MOCK_REVIEW_PAGE_SIZE,
+      total,
+      totalPages,
+      items
+    });
   } catch (err) {
     next(err);
   }

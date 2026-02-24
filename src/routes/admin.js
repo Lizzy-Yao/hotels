@@ -8,13 +8,16 @@ const router = express.Router();
 // 管理员列表（默认看 SUBMITTED）
 router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next) => {
   try {
-    const { status = "SUBMITTED", merchant_id, page = "1", pageSize = "10" } = req.query;
-    const p = Math.max(1, parseInt(page, 10));
-    const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10)));
+    const { status, merchant_id, page = "1", pageSize = "10" } = req.query;
+
+    const p = Math.max(1, parseInt(page, 10) || 1);
+    const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10) || 10));
+
+    const statusValue = typeof status === "string" ? status.trim() : "";
 
     const where = {
-      ...(status ? { status } : {}),
-      ...(merchant_id ? { merchantId: String(merchant_id) } : {})
+      ...(statusValue ? { status: statusValue } : {}), 
+      ...(merchant_id ? { merchantId: String(merchant_id) } : {}),
     };
 
     const [total, items] = await Promise.all([
@@ -24,8 +27,10 @@ router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next
         orderBy: { updatedAt: "desc" },
         skip: (p - 1) * ps,
         take: ps,
-        include: { 
-          merchant: { select: { id: true, username: true } }, 
+        include: {
+          merchant: {
+            select: { id: true, username: true },
+          },
           roomTypes: {
             select: {
               id: true,
@@ -34,22 +39,47 @@ router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next
               currency: true,
             },
             orderBy: { basePriceCents: "asc" },
-        }, }
-      })
+          },
+        },
+      }),
     ]);
-    const formattedItems = items.map(item => {
+
+    const formattedItems = items.map((item) => {
       const newItem = { ...item };
       if (newItem.openDate) {
-        newItem.openDate = format(new Date(newItem.openDate), 'yyyy-MM-dd');
+        newItem.openDate = format(new Date(newItem.openDate), "yyyy-MM-dd");
       }
       return newItem;
     });
-    res.json({ page: p, pageSize: ps, total, items:formattedItems });
+
+    res.json({
+      page: p,
+      pageSize: ps,
+      total,
+      items: formattedItems,
+    });
   } catch (err) {
     next(err);
   }
 });
 
+// 酒店详情（管理员）
+router.get("/hotels/:id", authRequired, roleRequired("ADMIN"), async (req, res, next) => {
+  try {
+    const hotelId = req.params.id;
+
+    const hotel = await prisma.hotel.findUnique({
+      where: { id: hotelId },
+      include: { roomTypes: true, nearbyPlaces: true, discounts: true }
+    });
+
+    if (!hotel) return res.status(404).json({ message: "酒店不存在" });
+
+    res.json({ hotel });
+  } catch (err) {
+    next(err);
+  }
+});
 // 审核
 const reviewSchema = z.object({
   result: z.enum(["APPROVE", "REJECT"]),
