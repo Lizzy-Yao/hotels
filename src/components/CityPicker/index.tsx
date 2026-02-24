@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import './index.scss'
 
 // 数据依然放在外部
-const hotCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '重庆', '西安', '三亚']
+const hotCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '重庆', '西安', '青岛']
 const allCities = [
   { letter: 'A', cities: ['澳门', '鞍山', '安庆', '安阳', '阿坝', '阿拉善盟'] },
   { letter: 'B', cities: ['北京', '保定', '包头', '宝鸡', '蚌埠', '白城', '百色', '北海'] },

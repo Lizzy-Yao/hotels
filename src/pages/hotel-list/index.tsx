@@ -21,7 +21,11 @@ type SearchState = {
 
 const safeDecode = (v?: string) => {
   if (!v) return ''
-  try { return decodeURIComponent(v) } catch { return v }
+  try {
+    return decodeURIComponent(v)
+  } catch (_err) {
+    return v
+  }
 }
 
 const safeParseTags = (v?: string) => {
@@ -30,7 +34,7 @@ const safeParseTags = (v?: string) => {
     const decoded = safeDecode(v)
     const parsed = JSON.parse(decoded)
     return Array.isArray(parsed) ? parsed.filter(Boolean) : []
-  } catch {
+  } catch (_err) {
     return [] as string[]
   }
 }
@@ -179,10 +183,14 @@ export default function HotelListPage () {
         tags: params.tags
       })
 
-      setTotal(data.total)
-      setAllList(data.list)
+      const safeList = Array.isArray(data.list)
+        ? data.list.filter(item => item && typeof item === 'object')
+        : []
 
-      Taro.showToast({ title: `找到 ${data.total} 家酒店`, icon: 'none' })
+      setTotal(typeof data.total === 'number' ? data.total : safeList.length)
+      setAllList(safeList)
+
+      Taro.showToast({ title: `找到 ${typeof data.total === 'number' ? data.total : safeList.length} 家酒店`, icon: 'none' })
     } catch (e) {
       const msg = e instanceof Error ? e.message : '查询失败，请稍后重试'
       setErrorMsg(msg)
@@ -250,8 +258,18 @@ export default function HotelListPage () {
     return '推荐排序'
   }, [sortKey, priceAsc])
 
+  const handleTapHotel = (hotelId: string) => {
+    if (!hotelId) {
+      Taro.showToast({ title: '酒店ID无效', icon: 'none' })
+      return
+    }
+    Taro.navigateTo({ url: `/pages/hotel-detail/index?hotelId=${encodeURIComponent(hotelId)}` })
+  }
+
+  const { statusBarHeight = 20 } = Taro.getSystemInfoSync()
+
   return (
-    <View className='list-page'>
+    <View className='list-page' style={{ '--status-bar-height': `${statusBarHeight}px` } as any}>
       <View className='top-bar'>
         <View className='safe-top' />
         <View className='top-inner'>
@@ -314,7 +332,7 @@ export default function HotelListPage () {
 
       <View className='content'>
         <View className='list-header'>
-          <Text className='total'>共 {sortedList.length} 家</Text>
+          <Text className='total'>筛选后 {sortedList.length} 家 · 共找到 {total} 家</Text>
           <Text className='sort-tip'>{sortHint}</Text>
         </View>
 
@@ -333,7 +351,7 @@ export default function HotelListPage () {
         ) : null}
 
         {!errorMsg && visibleList.map(item => (
-          <View key={item.hotelId} className='hotel-card'>
+          <View key={item.hotelId} className='hotel-card' onClick={() => handleTapHotel(item.hotelId)}>
             {item.coverImage ? (
               <Image
                 className='hotel-cover'
@@ -361,12 +379,12 @@ export default function HotelListPage () {
               <Text className='hotel-address'>{item.address}</Text>
 
               <View className='hotel-meta'>
-                <Text className='hotel-score'>{(item.score || 0).toFixed(1)} 分</Text>
-                <Text className='hotel-comment'>{item.commentCount || 0} 条点评</Text>
+                <Text className='hotel-score'>{Number(item.score || 0).toFixed(1)} 分</Text>
+                <Text className='hotel-comment'>{Number(item.commentCount || 0)} 条点评</Text>
               </View>
 
               <View className='hotel-tags'>
-                {(item.tags || []).slice(0, 3).map(tag => (
+                {(Array.isArray(item.tags) ? item.tags : []).slice(0, 3).map(tag => (
                   <Text key={`${item.hotelId}-${tag}`} className='hotel-tag'>{tag}</Text>
                 ))}
               </View>
@@ -374,7 +392,7 @@ export default function HotelListPage () {
               <View className='bottom-row'>
                 <Text className='hint'>每晚均价</Text>
                 <View>
-                  <Text className='hotel-price'>¥{item.minPrice}</Text>
+                  <Text className='hotel-price'>¥{Number(item.minPrice || 0)}</Text>
                   <Text className='price-unit'>起</Text>
                 </View>
               </View>

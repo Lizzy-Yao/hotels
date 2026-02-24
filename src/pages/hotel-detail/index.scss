@@ -1,0 +1,214 @@
+.hotel-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #EAF1FF 0%, #F5F7FA 30%, #F5F7FA 100%);
+
+  .hero {
+    padding: 0 24px 18px;
+    background: linear-gradient(135deg, #0E4DB3 0%, #1F78E0 55%, #65A8FF 100%);
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+    box-shadow: 0 14px 30px rgba(31, 120, 224, 0.26);
+
+    .safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .nav-row {
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .back,
+      .placeholder {
+        width: 64px;
+        height: 64px;
+      }
+
+      .back {
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.24);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 36px;
+      }
+
+      .title {
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 700;
+      }
+    }
+
+    .hero-card {
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(6px);
+      border-radius: 26px;
+      padding: 24px;
+
+      .hero-main {
+        color: #ffffff;
+        font-size: 36px;
+        font-weight: 800;
+        display: block;
+      }
+
+      .hero-sub {
+        margin-top: 10px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 24px;
+        display: block;
+      }
+
+      .hero-star {
+        margin-top: 14px;
+        color: #FFE08A;
+        font-size: 24px;
+        font-weight: 600;
+        display: inline-block;
+        background: rgba(8, 33, 91, 0.28);
+        padding: 8px 14px;
+        border-radius: 16px;
+      }
+    }
+  }
+
+  .content {
+    padding: 20px 24px 34px;
+  }
+
+  .card,
+  .error-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+  }
+
+  .card-title {
+    font-size: 28px;
+    color: #0F172A;
+    font-weight: 800;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .line {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #EEF2F7;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .k {
+      color: #64748B;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .v {
+      color: #0F172A;
+      font-size: 24px;
+      text-align: right;
+
+      &.highlight {
+        color: #C2410C;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .item {
+    padding: 14px 0;
+    border-bottom: 1px dashed #E2E8F0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .item-title {
+      font-size: 26px;
+      color: #0F172A;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .item-price {
+      color: #DC2626;
+      font-size: 24px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .item-desc {
+      font-size: 22px;
+      color: #64748B;
+      display: block;
+      margin-top: 4px;
+    }
+  }
+
+  .type-tag,
+  .discount-tag {
+    font-size: 20px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+
+  .type-tag {
+    background: #E7F0FF;
+    color: #1D4ED8;
+  }
+
+  .discount-tag {
+    background: #FFF1E6;
+    color: #C2410C;
+  }
+
+  .empty {
+    color: #94A3B8;
+    font-size: 22px;
+    display: block;
+    padding: 8px 0 4px;
+  }
+
+  .error-text {
+    font-size: 24px;
+    color: #475569;
+    text-align: center;
+    display: block;
+  }
+
+  .retry-btn {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
+    color: #ffffff;
+    border-radius: 18px;
+    height: 74px;
+    line-height: 74px;
+    font-size: 26px;
+
+    &::after {
+      border: none;
+    }
+  }
+}

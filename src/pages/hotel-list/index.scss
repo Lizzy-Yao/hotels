@@ -2,20 +2,28 @@
     min-height: 100vh;
     background: #F5F7FA;
   
+    /* 顶部安全区：用真实 statusBarHeight 兜底 + 再多留 10px 呼吸感 */
     .safe-top {
-      padding-top: env(safe-area-inset-top);
+      height: calc(var(--status-bar-height, 20px) + 10px);
       background: #ffffff;
     }
   
+    /* 顶部吸顶区做成“圆角卡片” */
     .top-bar {
       position: sticky;
       top: 0;
       z-index: 20;
       background: #ffffff;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      border-bottom-left-radius: 22px;
+      border-bottom-right-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.10);
     }
   
-    .top-inner { padding: 18px 24px 16px; }
+    /* 内边距加大一点，避免内容贴边 */
+    .top-inner {
+      padding: 14px 24px 18px;
+    }
   
     .top-row {
       display: flex;
@@ -23,34 +31,36 @@
       gap: 16px;
   
       .back-btn {
-        width: 64px; height: 64px;
-        border-radius: 20px;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
         background: #F3F4F6;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 36px;
         color: #111827;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
       }
   
       .core-conds {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
   
         .cond-line {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
   
           .city-pill {
             background: #EFF6FF;
             color: #1D4ED8;
             font-size: 24px;
-            padding: 8px 14px;
+            padding: 10px 14px;
             border-radius: 18px;
-            font-weight: 600;
+            font-weight: 700;
             max-width: 220px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -60,7 +70,7 @@
           .date-text {
             font-size: 24px;
             color: #374151;
-            font-weight: 500;
+            font-weight: 600;
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -71,20 +81,33 @@
             font-size: 22px;
             color: #6B7280;
             background: #F3F4F6;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 16px;
+            font-weight: 600;
           }
         }
   
+        /* 搜索框更“携程感”：加细边框 + 更饱满的高度 */
         .search-line {
           display: flex;
           align-items: center;
-          background: #F8F9FC;
-          border-radius: 18px;
+          background: #F8FAFF;
+          border-radius: 20px;
           padding: 14px 16px;
+          border: 1px solid rgba(17, 24, 39, 0.06);
   
-          .search-icon { font-size: 26px; margin-right: 12px; color: #9CA3AF; }
-          .search-input { flex: 1; font-size: 26px; color: #111827; }
+          .search-icon {
+            font-size: 26px;
+            margin-right: 12px;
+            color: #9CA3AF;
+          }
+  
+          .search-input {
+            flex: 1;
+            font-size: 26px;
+            color: #111827;
+          }
+  
           .placeholder-style { color: #9CA3AF; }
   
           .search-btn {
@@ -92,23 +115,26 @@
             background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
             color: #ffffff;
             font-size: 24px;
-            font-weight: 700;
-            height: 56px;
-            line-height: 56px;
+            font-weight: 800;
+            height: 60px;
+            line-height: 60px;
             border-radius: 18px;
-            padding: 0 18px;
+            padding: 0 20px;
+            box-shadow: 0 10px 20px rgba(0, 82, 217, 0.25);
             &::after { border: none; }
           }
         }
       }
     }
   
+    /* 筛选条加“底部分隔感”，别贴太紧 */
     .filter-bar {
       display: flex;
-      gap: 14px;
-      padding: 14px 24px 18px;
+      gap: 12px;
+      padding: 10px 24px 16px;
       overflow-x: auto;
       white-space: nowrap;
+      border-top: 1px solid rgba(17, 24, 39, 0.05);
   
       &::-webkit-scrollbar { display: none; }
   
@@ -117,13 +143,16 @@
         color: #374151;
         font-size: 24px;
         padding: 10px 16px;
-        border-radius: 20px;
+        border-radius: 999px;
         flex-shrink: 0;
+        border: 1px solid rgba(17, 24, 39, 0.06);
   
         &.active {
           background: #0052D9;
           color: #ffffff;
-          font-weight: 600;
+          font-weight: 800;
+          border-color: transparent;
+          box-shadow: 0 10px 20px rgba(0, 82, 217, 0.22);
         }
       }
     }
@@ -168,6 +197,12 @@
       margin-bottom: 18px;
       padding: 18px;
       box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+      &:active {
+        transform: scale(0.99);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      }
   
       .hotel-cover {
         width: 196px;
