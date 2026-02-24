@@ -30,7 +30,7 @@ function parseYmdDate(dateStr) {
 
   return date;
 }
-// TODO 新增酒店城市字段
+
 router.post("/hotels/search", async (req, res) => {
   try {
     const body = searchSchema.parse(req.body);
@@ -48,7 +48,7 @@ router.post("/hotels/search", async (req, res) => {
 
     const cityExists = await prisma.hotel.count({
       where: {
-        status: "PUBLISHED",
+        status: "APPROVED",
         address: { contains: body.city },
       },
     });
@@ -65,7 +65,7 @@ router.post("/hotels/search", async (req, res) => {
     const tags = (body.tags || []).map((tag) => tag.trim()).filter(Boolean);
 
     const where = {
-      status: "PUBLISHED",
+      status: "APPROVED",
       address: { contains: body.city },
       ...(keyword
         ? {
@@ -142,7 +142,7 @@ router.post("/hotels/search", async (req, res) => {
         address: hotel.address,
         coverImage: "",
         tags: mergedTags,
-        minPrice: Math.floor(minPriceCents / 100),
+        minPrice: Math.floor(minPriceCents),
         score: Number(hotel.starRating.toFixed(1)),
         commentCount: hotel._count.auditLogs,
       };
