@@ -33,8 +33,28 @@ export type Hotel = {
   nearbyMalls?: string[];
   discounts?: DiscountScenario[];
   auditNote?: string;
+  rejectReason?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type HotelReview = {
+  id: string;
+  userName: string;
+  rating: number;
+  content: string;
+  checkInDate: string;
+  createdAt: string;
+};
+
+export type HotelReviewList = {
+  hotelId: string;
+  starRating: number;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  items: HotelReview[];
 };
 
 type AnyObject = Record<string, any>;
@@ -323,5 +343,44 @@ export async function adminRestore(params: { id: string }) {
     return normalizeHotel(extractData<AnyObject>(response) || {});
   } catch (error) {
     throw parseError(error, '恢复失败');
+  }
+}
+
+export async function listHotelReviews(params: { id: string; page?: number }) {
+  try {
+    const response = await request(`/api/v1/hotels/${params.id}/reviews`, {
+      method: 'GET',
+      params: {
+        page: params.page,
+      },
+    });
+
+    const data = extractData<AnyObject>(response) || {};
+    const listSource = Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(response?.items)
+      ? response.items
+      : [];
+
+    const items: HotelReview[] = listSource.map((item: AnyObject) => ({
+      id: String(item?.id || ''),
+      userName: String(item?.userName || item?.user_name || '匿名用户'),
+      rating: Number(item?.rating ?? 0),
+      content: String(item?.content || ''),
+      checkInDate: String(item?.checkInDate || item?.check_in_date || ''),
+      createdAt: String(item?.createdAt || item?.created_at || ''),
+    }));
+
+    return {
+      hotelId: String(data?.hotelId || data?.hotel_id || params.id),
+      starRating: Number(data?.starRating ?? data?.star_rating ?? 0),
+      page: Number(data?.page ?? params.page ?? 1),
+      pageSize: Number(data?.pageSize ?? data?.page_size ?? 20),
+      total: Number(data?.total ?? items.length),
+      totalPages: Number(data?.totalPages ?? data?.total_pages ?? 1),
+      items,
+    } as HotelReviewList;
+  } catch (error) {
+    throw parseError(error, '获取评价列表失败');
   }
 }
