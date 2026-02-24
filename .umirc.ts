@@ -74,6 +74,12 @@ export default defineConfig({
           access: 'canAccessAdmin',
         },
         {
+          path: '/admin/hotels/:id',
+          component: './admin/Hotels/Detail',
+          hideInMenu: true,
+          access: 'canAccessAdmin',
+        },
+        {
           path: '/admin/hotels',
           name: '酒店管理',
           icon: 'ApartmentOutlined',

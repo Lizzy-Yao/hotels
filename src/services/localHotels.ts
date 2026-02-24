@@ -204,6 +204,14 @@ export async function getHotel(id: string) {
   return response;
 }
 
+export async function getAdminHotel(id: string) {
+  const response = await request(`/api/v1/admin/hotels/${id}`, {
+    method: 'GET',
+  });
+
+  return response;
+}
+
 export async function upsertHotel(input: {
   id?: string;
   owner: string;

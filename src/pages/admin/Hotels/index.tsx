@@ -1,30 +1,19 @@
 import {
   Hotel,
-  HotelReviewList,
   adminOffline,
   adminPublish,
   adminRestore,
   listAdminHotels,
-  listHotelReviews,
 } from '@/services/localHotels';
 import type { ProColumns } from '@ant-design/pro-components';
 import {
   ActionType,
   PageContainer,
-  ProDescriptions,
   ProTable,
 } from '@ant-design/pro-components';
-import {
-  Drawer,
-  List,
-  Pagination,
-  Rate,
-  Space,
-  Tag,
-  Typography,
-  message,
-} from 'antd';
-import React, { useRef, useState } from 'react';
+import { history } from '@umijs/max';
+import { Space, Tag, message } from 'antd';
+import React, { useRef } from 'react';
 
 function statusTag(status: Hotel['status']) {
   switch (status) {
@@ -47,22 +36,6 @@ function statusTag(status: Hotel['status']) {
 
 const AdminHotelsPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [current, setCurrent] = useState<Hotel | null>(null);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [reviews, setReviews] = useState<HotelReviewList | null>(null);
-
-  const loadReviews = async (hotelId: string, page: number) => {
-    setReviewLoading(true);
-    try {
-      const result = await listHotelReviews({ id: hotelId, page });
-      setReviews(result);
-    } catch (error: any) {
-      message.error(error?.message || '获取评论失败');
-    } finally {
-      setReviewLoading(false);
-    }
-  };
 
   const columns: ProColumns<Hotel>[] = [
     { title: '酒店名(中文)', dataIndex: 'nameCn' },
@@ -75,6 +48,7 @@ const AdminHotelsPage: React.FC = () => {
       dataIndex: 'status',
       width: 110,
       valueEnum: {
+        all: { text: '全部' },
         draft: { text: '草稿' },
         submitted: { text: '已提交' },
         approved: { text: '已通过' },
@@ -95,14 +69,7 @@ const AdminHotelsPage: React.FC = () => {
 
         return (
           <Space>
-            <a
-              onClick={() => {
-                setCurrent(record);
-                setReviews(null);
-                setDetailOpen(true);
-                loadReviews(record.id, 1);
-              }}
-            >
+            <a onClick={() => history.push(`/admin/hotels/${record.id}`)}>
               查看
             </a>
             <a
@@ -155,12 +122,60 @@ const AdminHotelsPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{ labelWidth: 90 }}
+        form={{
+          initialValues: {
+            status: 'all',
+          },
+        }}
         request={async (params) => {
           try {
+            const status = (params.status as string | undefined) || 'all';
+
+            if (status === 'all') {
+              const allStatus: Hotel['status'][] = [
+                'DRAFT',
+                'SUBMITTED',
+                'APPROVED',
+                'REJECTED',
+                'PUBLISHED',
+                'OFFLINE',
+              ];
+
+              const responses = await Promise.all(
+                allStatus.map((item) =>
+                  listAdminHotels({
+                    page: 1,
+                    pageSize: 200,
+                    status: item,
+                  }),
+                ),
+              );
+
+              const unique = new Map<string, Hotel>();
+              responses.forEach((res) => {
+                res.list.forEach((hotel) => {
+                  unique.set(hotel.id, hotel);
+                });
+              });
+
+              const merged = Array.from(unique.values()).sort((a, b) =>
+                String(b.updatedAt || '').localeCompare(
+                  String(a.updatedAt || ''),
+                ),
+              );
+
+              const current = params.current || 1;
+              const pageSize = params.pageSize || 10;
+              const start = (current - 1) * pageSize;
+              const data = merged.slice(start, start + pageSize);
+
+              return { data, success: true, total: merged.length };
+            }
+
             const result = await listAdminHotels({
               page: params.current,
               pageSize: params.pageSize,
-              status: params.status as string,
+              status,
             });
             return { data: result.list, success: true, total: result.total };
           } catch (error: any) {
@@ -171,103 +186,6 @@ const AdminHotelsPage: React.FC = () => {
         columns={columns}
         pagination={{ pageSize: 10 }}
       />
-
-      <Drawer
-        width={760}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        title="酒店详情"
-      >
-        {current ? (
-          <>
-            <Typography.Paragraph type="secondary">
-              {statusTag(current.status)}
-              {reviews
-                ? `  当前评分：${reviews.starRating || current.starRating || 0}`
-                : ''}
-            </Typography.Paragraph>
-
-            <ProDescriptions<Hotel>
-              column={2}
-              dataSource={current}
-              columns={[
-                { title: '商户', dataIndex: 'owner' },
-                { title: '酒店名(中文)', dataIndex: 'nameCn' },
-                { title: '酒店名(英文)', dataIndex: 'nameEn' },
-                { title: '地址', dataIndex: 'address', span: 2 },
-                { title: '星级', dataIndex: 'starRating' },
-                { title: '开业时间', dataIndex: 'openDate' },
-                {
-                  title: '房型/价格',
-                  dataIndex: 'roomTypes',
-                  span: 2,
-                  render: (_, row) =>
-                    row.roomTypes?.length
-                      ? row.roomTypes
-                          .map(
-                            (room) => `${room.name}：${room.basePriceCents} 元`,
-                          )
-                          .join('；')
-                      : '暂无数据',
-                },
-                { title: '创建时间', dataIndex: 'createdAt', span: 2 },
-                { title: '更新时间', dataIndex: 'updatedAt', span: 2 },
-              ]}
-            />
-
-            <Typography.Title level={5} style={{ marginTop: 20 }}>
-              评论列表
-            </Typography.Title>
-
-            <List
-              loading={reviewLoading}
-              locale={{ emptyText: '暂无评论' }}
-              dataSource={reviews?.items || []}
-              renderItem={(item) => (
-                <List.Item key={item.id}>
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <Typography.Text strong>
-                          {item.userName}
-                        </Typography.Text>
-                        <Rate disabled allowHalf value={item.rating} />
-                        <Typography.Text type="secondary">
-                          入住日期：{item.checkInDate || '-'}
-                        </Typography.Text>
-                      </Space>
-                    }
-                    description={
-                      <>
-                        <Typography.Paragraph style={{ marginBottom: 6 }}>
-                          {item.content || '未填写评论内容'}
-                        </Typography.Paragraph>
-                        <Typography.Text type="secondary">
-                          评论时间：{item.createdAt || '-'}
-                        </Typography.Text>
-                      </>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-
-            {(reviews?.total || 0) > (reviews?.pageSize || 20) ? (
-              <Pagination
-                style={{ marginTop: 12, textAlign: 'right' }}
-                current={reviews?.page || 1}
-                pageSize={reviews?.pageSize || 20}
-                total={reviews?.total || 0}
-                onChange={(page) => {
-                  if (current) {
-                    loadReviews(current.id, page);
-                  }
-                }}
-              />
-            ) : null}
-          </>
-        ) : null}
-      </Drawer>
     </PageContainer>
   );
 };
