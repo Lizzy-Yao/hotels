@@ -1,11 +1,86 @@
 .container {
-  padding-top: 8px;
+  padding: 8px 4px 16px;
 }
 
-.tip {
+/* 顶部欢迎卡片 */
+.heroCard {
   margin-bottom: 16px;
+  border-radius: 16px;
+  overflow: hidden;
+
+  /* 渐变背景，提升首页视觉层次 */
+  background: linear-gradient(135deg, #f0f7ff 0%, #f7fbff 45%, #ffffff 100%);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
-.card {
+.heroContent {
+  padding: 8px 4px;
+}
+
+.heroBadge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(22, 119, 255, 0.08);
+  color: #1677ff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+}
+
+.heroTitle {
+  margin-bottom: 8px !important;
+}
+
+.heroDesc {
+  max-width: 860px;
+  margin-bottom: 12px !important;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.8;
+}
+
+/* 区块标题 */
+.sectionHeader {
+  margin: 8px 0 12px;
+}
+
+.sectionTitle {
+  margin-bottom: 4px !important;
+}
+
+/* 功能卡片 */
+.featureCard {
   height: 100%;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
+  transition: all 0.2s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+}
+
+.featureHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.featureIcon {
+  color: #1677ff;
+  font-size: 20px;
+}
+
+.featureTitle {
+  margin: 0 !important;
+}
+
+.featureDesc {
+  min-height: 52px;
+  margin-bottom: 10px !important;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.7;
 }
