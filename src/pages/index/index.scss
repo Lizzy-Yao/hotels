@@ -125,4 +125,117 @@
       &:active { opacity: 0.9; transform: scale(0.98); } // 点击动效
     }
   }
+
+  .result-panel {
+    margin: -20px 32px 0;
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      .result-title {
+        font-size: 34px;
+        color: #1F2937;
+        font-weight: 700;
+      }
+
+      .result-count {
+        font-size: 24px;
+        color: #6B7280;
+      }
+    }
+
+    .empty-result {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 40px 28px;
+      font-size: 26px;
+      color: #6B7280;
+      text-align: center;
+      box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+    }
+
+    .hotel-card {
+      display: flex;
+      background: #FFFFFF;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      padding: 18px;
+      box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+
+      .hotel-cover {
+        width: 180px;
+        height: 180px;
+        border-radius: 14px;
+        background: #EEF2FF;
+        color: #94A3B8;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .hotel-info {
+        margin-left: 18px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .hotel-name {
+          font-size: 30px;
+          color: #111827;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+
+        .hotel-address {
+          font-size: 22px;
+          color: #6B7280;
+          margin-bottom: 10px;
+        }
+
+        .hotel-meta {
+          display: flex;
+          gap: 14px;
+          margin-bottom: 10px;
+
+          .hotel-score {
+            color: #D97706;
+            font-size: 22px;
+            font-weight: 600;
+          }
+
+          .hotel-comment {
+            color: #6B7280;
+            font-size: 22px;
+          }
+        }
+
+        .hotel-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 12px;
+
+          .hotel-tag {
+            font-size: 20px;
+            color: #1D4ED8;
+            background: #EFF6FF;
+            border-radius: 20px;
+            padding: 4px 12px;
+          }
+        }
+
+        .hotel-price {
+          margin-top: auto;
+          text-align: right;
+          color: #DC2626;
+          font-size: 32px;
+          font-weight: 700;
+        }
+      }
+    }
+  }
 }
