@@ -1,3 +1,5 @@
+import { getCurrentUser } from '@/services/localAuth';
+
 type Role = 'MERCHANT' | 'ADMIN';
 
 type InitialState = {
@@ -8,8 +10,10 @@ type InitialState = {
 };
 
 export default (initialState: InitialState) => {
-  const role = initialState?.currentUser?.role;
-  const isLoggedIn = !!initialState?.currentUser;
+  const currentUser =
+    initialState?.currentUser || getCurrentUser() || undefined;
+  const role = currentUser?.role;
+  const isLoggedIn = !!currentUser;
   return {
     isLoggedIn,
     canAccessMerchant: isLoggedIn && role === 'MERCHANT',

@@ -21,7 +21,6 @@ export default defineConfig({
       name: '首页',
       icon: 'HomeOutlined',
       component: './Home',
-      access: 'isLoggedIn',
     },
     {
       path: '/user',

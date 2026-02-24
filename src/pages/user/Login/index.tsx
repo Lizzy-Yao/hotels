@@ -4,14 +4,17 @@ import { Button, Card, Divider, Form, Input, Typography, message } from 'antd';
 import React from 'react';
 
 const LoginPage: React.FC = () => {
-  const { initialState, setInitialState } = useModel('@@initialState');
+  const { setInitialState } = useModel('@@initialState');
 
   const onFinish = async (values: { username: string; password: string }) => {
     try {
       const currentUser = await login(values);
-      await setInitialState?.({ ...initialState, currentUser });
+      await setInitialState?.((prev: any) => ({
+        ...(prev || {}),
+        currentUser,
+      }));
       message.success('登录成功');
-      history.push('/');
+      history.replace('/');
     } catch (e: any) {
       message.error(e?.message || '登录失败');
     }
