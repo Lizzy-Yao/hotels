@@ -26,12 +26,18 @@ function authRequired(req, res, next) {
  * 角色校验：
  * @param {"MERCHANT"|"ADMIN"} role
  */
-function roleRequired(role) {
+function roleRequired(...roles) {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: "未登录" });
-    if (req.user.role !== role) {
+    // 未登录
+    if (!req.user) {
+      return res.status(401).json({ message: "未登录" });
+    }
+
+    // 不在允许角色列表
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: "无权限" });
     }
+
     next();
   };
 }

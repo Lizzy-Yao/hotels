@@ -5,63 +5,170 @@ const { authRequired, roleRequired } = require("../middlewares/auth");
 const { format } = require('date-fns');
 const router = express.Router();
 
-// 管理员列表（默认看 SUBMITTED）
-router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next) => {
-  try {
-    const { status, merchant_id, page = "1", pageSize = "10" } = req.query;
+// // 管理员列表（默认看 SUBMITTED）
+// router.get("/hotels", authRequired, roleRequired("ADMIN"), async (req, res, next) => {
+//   try {
+//     const { status, merchant_id, page = "1", pageSize = "10" } = req.query;
 
-    const p = Math.max(1, parseInt(page, 10) || 1);
-    const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10) || 10));
+//     const p = Math.max(1, parseInt(page, 10) || 1);
+//     const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10) || 10));
 
-    const statusValue = typeof status === "string" ? status.trim() : "";
+//     const statusValue = typeof status === "string" ? status.trim() : "";
 
-    const where = {
-      ...(statusValue ? { status: statusValue } : {}), 
-      ...(merchant_id ? { merchantId: String(merchant_id) } : {}),
-    };
+//     const where = {
+//       ...(statusValue ? { status: statusValue } : {}), 
+//       ...(merchant_id ? { merchantId: String(merchant_id) } : {}),
+//     };
 
-    const [total, items] = await Promise.all([
-      prisma.hotel.count({ where }),
-      prisma.hotel.findMany({
-        where,
-        orderBy: { updatedAt: "desc" },
-        skip: (p - 1) * ps,
-        take: ps,
-        include: {
-          merchant: {
-            select: { id: true, username: true },
-          },
-          roomTypes: {
-            select: {
-              id: true,
-              name: true,
-              basePriceCents: true,
-              currency: true,
-            },
-            orderBy: { basePriceCents: "asc" },
-          },
-        },
-      }),
-    ]);
+//     const [total, items] = await Promise.all([
+//       prisma.hotel.count({ where }),
+//       prisma.hotel.findMany({
+//         where,
+//         orderBy: { updatedAt: "desc" },
+//         skip: (p - 1) * ps,
+//         take: ps,
+//         include: {
+//           merchant: {
+//             select: { id: true, username: true },
+//           },
+//           roomTypes: {
+//             select: {
+//               id: true,
+//               name: true,
+//               basePriceCents: true,
+//               currency: true,
+//             },
+//             orderBy: { basePriceCents: "asc" },
+//           },
+//         },
+//       }),
+//     ]);
 
-    const formattedItems = items.map((item) => {
-      const newItem = { ...item };
-      if (newItem.openDate) {
-        newItem.openDate = format(new Date(newItem.openDate), "yyyy-MM-dd");
+//     const formattedItems = items.map((item) => {
+//       const newItem = { ...item };
+//       if (newItem.openDate) {
+//         newItem.openDate = format(new Date(newItem.openDate), "yyyy-MM-dd");
+//       }
+//       return newItem;
+//     });
+
+//     res.json({
+//       page: p,
+//       pageSize: ps,
+//       total,
+//       items: formattedItems,
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+
+// 暂时不用-用hotels.js的接口
+router.get(
+  "/hotels",
+  authRequired,
+  roleRequired("ADMIN"),
+  async (req, res, next) => {
+    try {
+      const { status, page = "1", pageSize = "10" } = req.query;
+      const p = Math.max(1, parseInt(page, 10));
+      const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10)));
+
+      const where = {
+        ...(status ? { status } : {}),
+      };
+
+      const now = new Date();
+
+      function isPromotionEffective(promo) {
+        if (promo.isActive === false) return false;
+        if (promo.startDate && now < promo.startDate) return false;
+        if (promo.endDate && now > promo.endDate) return false;
+        return true;
       }
-      return newItem;
-    });
 
-    res.json({
-      page: p,
-      pageSize: ps,
-      total,
-      items: formattedItems,
-    });
-  } catch (err) {
-    next(err);
+      function mapPromotionToDiscount(promo) {
+        // 你的 schema: PromotionType = percentOff | PACKAGE_MINUS
+        if (promo.type === "percentOff") {
+          const percent = Number(promo.percentOff ?? 0); // 例如 20 表示便宜 20%
+          const value = (100 - percent) / 100; // 20 -> 0.8 -> 8折
+          return {
+            type: "discount",
+            name: promo.title,
+            value,
+            description: promo.description || "",
+          };
+        }
+
+        // PACKAGE_MINUS：立减
+        const amountYuan = Number(promo.amountOffCents ?? 0) / 100;
+        return {
+          type: "minus",
+          name: promo.title,
+          value: amountYuan,
+          description: promo.description || "",
+        };
+      }
+
+      const [total, items] = await Promise.all([
+        prisma.hotel.count({ where }),
+        prisma.hotel.findMany({
+          where,
+          orderBy: { updatedAt: "desc" },
+          skip: (p - 1) * ps,
+          take: ps,
+          include: {
+            nearbyPlaces: {
+              orderBy: [{ type: "asc" }, { createdAt: "asc" }],
+            },
+
+            // ✅ 房型/价格：按前端字段名 roomTypes 直接返回
+            roomTypes: {
+              select: {
+                id: true,
+                name: true,
+                basePriceCents: true,
+                currency: true,
+              },
+              orderBy: { basePriceCents: "asc" },
+            },
+
+            // ✅ 优惠活动：从 discounts 映射到 discounts
+            discounts: {
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                description: true,
+                percentOff: true,
+                amountOffCents: true,
+                startDate: true,
+                endDate: true,
+                isActive: true,
+              },
+              orderBy: { createdAt: "desc" },
+            },
+          },
+        }),
+        
+      ]);
+      
+      const formattedItems = items.map(item => {
+        const newItem = { ...item };
+        if (newItem.openDate) {
+          newItem.openDate = format(new Date(newItem.openDate), 'yyyy-MM-dd');
+        }
+        return newItem;
+      });
+      
+      res.json({ page: p, pageSize: ps, total, items:formattedItems });
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
+
+
 
 // 酒店详情（管理员）
 router.get("/hotels/:id", authRequired, roleRequired("ADMIN"), async (req, res, next) => {

@@ -220,7 +220,7 @@ router.put("/:id", authRequired, roleRequired("MERCHANT"), async (req, res, next
 router.get(
   "/",
   authRequired,
-  roleRequired("MERCHANT"),
+  roleRequired("MERCHANT", "ADMIN"),
   async (req, res, next) => {
     try {
       const { status, page = "1", pageSize = "10" } = req.query;
@@ -228,7 +228,9 @@ router.get(
       const ps = Math.min(50, Math.max(1, parseInt(pageSize, 10)));
 
       const where = {
-        merchantId: req.user.id,
+        ...(req.user.role === "MERCHANT"
+          ? { merchantId: req.user.id }
+          : {}),
         ...(status ? { status } : {}),
       };
 
