@@ -51,13 +51,18 @@ const calcNights = (checkIn: string, checkOut: string) => {
   const nights = Math.round((end - start) / (1000 * 60 * 60 * 24))
   return nights > 0 ? nights : 1
 }
-
-const renderStarText = (starLevel?: number) => {
-  const s = Number(starLevel || 0)
-  if (!s) return '星级：不限'
-  return `星级：${'★'.repeat(Math.min(s, 5))}`
+const normalizeStarRating = (v: unknown) => {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return 0
+  const s = Math.round(n)
+  return Math.min(Math.max(s, 0), 5)
 }
 
+const renderStarRatingText = (starRating: unknown) => {
+  const s = normalizeStarRating(starRating)
+  if (s <= 0) return ''
+  return `星级：${'★'.repeat(s)}`
+}
 const BATCH_SIZE = 10
 
 export default function HotelListPage () {
@@ -115,7 +120,7 @@ export default function HotelListPage () {
     return allList.filter(item => {
       // 星级过滤
       if (star > 0) {
-        const s = Number((item as any).starLevel || 0)
+        const s = normalizeStarRating((item as any).starRating ?? (item as any).starLevel)
         if (s !== star) return false
       }
 
@@ -370,16 +375,21 @@ export default function HotelListPage () {
                 <Text className='hotel-name-en'>{(item as any).hotelNameEn}</Text>
               ) : null}
 
-              {/* 星级 & 开业时间（维度来自大作业要求，后端缺失则前端优雅降级） */}
-              <View className='hotel-subline'>
-                <Text className='star'>{renderStarText((item as any).starLevel)}</Text>
-                {(item as any).openTime ? <Text className='open-time'>开业：{(item as any).openTime}</Text> : null}
-              </View>
+                <View className='hotel-subline'>
+                  {(() => {
+                    const starText = renderStarRatingText((item as any).starRating)
+                    return starText
+                      ? <Text className='star'>{starText}</Text>
+                      : <Text className='star star-empty'>暂无星级</Text>
+                  })()}
+
+                  {(item as any).openTime ? <Text className='open-time'>开业：{(item as any).openTime}</Text> : null}
+                </View>
 
               <Text className='hotel-address'>{item.address}</Text>
 
               <View className='hotel-meta'>
-                <Text className='hotel-score'>{Number(item.score || 0).toFixed(1)} 分</Text>
+                <Text className='hotel-score'>评分 {Number(item.score || 0).toFixed(1)}</Text>
                 <Text className='hotel-comment'>{Number(item.commentCount || 0)} 条点评</Text>
               </View>
 

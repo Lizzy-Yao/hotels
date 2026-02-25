@@ -88,15 +88,21 @@ export default function HotelDetailPage () {
     return min === max ? min : `${min} - ${max}`
   }, [hotel])
 
+  // 顶部安全区兜底：安卓上 env(safe-area-inset-top) 经常为 0
+  const { statusBarHeight = 24 } = Taro.getSystemInfoSync()
+
   return (
-    <View className='hotel-detail-page'>
+    <View
+      className='hotel-detail-page'
+      style={{ '--status-bar-height': `${statusBarHeight}px` } as any}
+    >
       <View className='hero'>
         <View className='safe-top' />
         <View className='nav-row'>
           <View className='back' onClick={() => Taro.navigateBack()}>
             <Text>‹</Text>
           </View>
-          <Text className='title'>酒店详情</Text>
+          {/* <Text className='title'>酒店详情</Text> */}
           <View className='placeholder' />
         </View>
 
@@ -131,7 +137,7 @@ export default function HotelDetailPage () {
                     <Text className='item-title'>{room.name}</Text>
                     <Text className='item-price'>{formatPriceCents(room.basePriceCents, room.currency)} / 晚</Text>
                   </View>
-                  <Text className='item-desc'>{room.bedType} · {room.capacity}人 · {room.areaSqm}m2</Text>
+                  {/* <Text className='item-desc'>{room.bedType} · {room.capacity}人 · {room.areaSqm}m2</Text> */}
                 </View>
               )) : <Text className='empty'>暂无房型数据</Text>}
             </View>

@@ -1,268 +1,330 @@
 .home-page {
   min-height: 100vh;
-  background-color: #F5F7FA;
-  padding-bottom: 40px;
+  background: #F5F7FA;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  .safe-top {
+    height: calc(var(--status-bar-height, 24px) + 8px);
+    background: transparent;
+  }
+
+  .banner-wrap {
+    position: relative;
+    margin: 0 16px;
+    border-radius: 26px;
+    overflow: hidden;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+  }
 
   .banner-swiper {
-    height: 500px; // 增加banner高度，更有沉浸感
-    position: relative;
+    height: 360px;
+  }
 
-    .banner-img {
-      width: 100%;
-      height: 100%;
+  .banner-img {
+    width: 100%;
+    height: 360px;
+  }
+
+  .banner-mask {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(3, 14, 38, 0.05) 0%, rgba(3, 14, 38, 0.55) 100%);
+  }
+
+  .banner-title {
+    position: absolute;
+    left: 22px;
+    bottom: 22px;
+    z-index: 2;
+
+    .banner-title-main {
+      font-size: 38px;
+      color: #ffffff;
+      font-weight: 900;
+      display: block;
+      letter-spacing: 0.4px;
     }
 
-    .banner-mask {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 200px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.4));
+    .banner-title-sub {
+      margin-top: 6px;
+      font-size: 22px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+      display: block;
     }
   }
 
+  /* 搜索卡片：上浮覆盖 Banner，形成层级 */
   .search-card {
-    position: relative;
-    top: -60px; // 核心：让卡片悬浮在 Banner 上
-    margin: 0 32px;
-    background: #FFFFFF;
-    border-radius: 32px; // 大圆角
-    padding: 40px 32px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08); // 柔和的高级阴影
+    margin: 14px 16px 14px;
+    background: #ffffff;
+    border-radius: 26px;
+    padding: 18px;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(17, 24, 39, 0.04);
+  }
 
-    .card-row {
-      margin-bottom: 40px;
-    }
+  .card-row {
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    background: #F8FAFF;
+    border: 1px solid rgba(17, 24, 39, 0.06);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
 
-    .location-row {
+  .location-row {
+    .location-box {
       display: flex;
       align-items: center;
-      background: #F8F9FC;
-      border-radius: 16px;
-      padding: 24px;
+      gap: 10px;
+      min-width: 130px;
 
-      .location-box {
-        display: flex;
-        flex-direction: column;
-        width: 160px;
-        
-        .city-name { font-size: 32px; font-weight: bold; color: #111; margin-bottom: 8px;}
-        .location-icon { font-size: 20px; color: #0052D9; font-weight: 500;}
+      .city-name {
+        font-size: 26px;
+        font-weight: 900;
+        color: #0F172A;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
-      .divider {
-        width: 2px;
-        height: 48px;
-        background: #E4E7ED;
-        margin: 0 24px;
-      }
-
-      .keyword-input {
-        flex: 1;
-        font-size: 28px;
-        color: #333;
-      }
-      .placeholder-style { color: #A0AEC0; }
-    }
-
-    .date-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-
-      .date-block {
-        display: flex;
-        flex-direction: column;
-        
-        .date-label { font-size: 24px; color: #888; margin-bottom: 8px; }
-        .date-value { font-size: 44px; font-weight: 800; color: #111; }
-        &.text-right { align-items: flex-end; }
-      }
-
-      .night-badge {
-        background: #F0F4FF;
-        color: #0052D9;
+      .location-icon {
         font-size: 22px;
-        padding: 6px 20px;
-        border-radius: 20px;
+        color: #64748B;
+      }
+    }
+
+    .divider {
+      width: 1px;
+      height: 30px;
+      background: rgba(17, 24, 39, 0.10);
+      margin: 0 14px;
+    }
+
+    .keyword-input {
+      flex: 1;
+      font-size: 26px;
+      color: #0F172A;
+    }
+
+    .placeholder-style { color: #94A3B8; }
+  }
+
+  .date-row {
+    justify-content: space-between;
+
+    .date-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .date-label {
+        font-size: 20px;
+        color: #64748B;
         font-weight: 600;
       }
+
+      .date-value {
+        font-size: 28px;
+        color: #0F172A;
+        font-weight: 900;
+      }
+
+      &.text-right {
+        text-align: right;
+        align-items: flex-end;
+      }
     }
 
-    .tags-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 40px;
+    .night-badge {
+      font-size: 22px;
+      color: #475569;
+      font-weight: 700;
+      background: rgba(243, 244, 246, 1);
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(17, 24, 39, 0.06);
+    }
+  }
 
-      .tag-pill {
-        background: #F5F7FA;
-        color: #666;
-        font-size: 24px;
-        padding: 12px 24px;
-        border-radius: 30px;
-        transition: all 0.2s;
+  .filters-row {
+    margin-bottom: 12px;
+
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 8px 0;
+
+      &::-webkit-scrollbar { display: none; }
+
+      .filter-pill {
+        background: #F3F4F6;
+        color: #334155;
+        font-size: 22px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        flex-shrink: 0;
+        border: 1px solid rgba(17, 24, 39, 0.06);
 
         &.active {
           background: #0052D9;
-          color: #FFF;
-          font-weight: 500;
-        }
-      }
-    }
-
-    .search-btn {
-      background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
-      color: #FFF;
-      font-size: 32px;
-      font-weight: bold;
-      border-radius: 24px;
-      height: 96px;
-      line-height: 96px;
-      box-shadow: 0 12px 24px rgba(0, 82, 217, 0.3); // 按钮发光阴影
-      
-      &::after { border: none; }
-      &:active { opacity: 0.9; transform: scale(0.98); } // 点击动效
-    }
-  }
-
-  .result-panel {
-    margin: -20px 32px 0;
-
-    .result-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-
-      .result-title {
-        font-size: 34px;
-        color: #1F2937;
-        font-weight: 700;
-      }
-
-      .result-count {
-        font-size: 24px;
-        color: #6B7280;
-      }
-    }
-
-    .empty-result {
-      background: #FFFFFF;
-      border-radius: 20px;
-      padding: 40px 28px;
-      font-size: 26px;
-      color: #6B7280;
-      text-align: center;
-      box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
-    }
-
-    .hotel-card {
-      display: flex;
-      background: #FFFFFF;
-      border-radius: 20px;
-      margin-bottom: 20px;
-      padding: 18px;
-      box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
-
-      .hotel-cover {
-        width: 180px;
-        height: 180px;
-        border-radius: 14px;
-        background: #EEF2FF;
-        color: #94A3B8;
-        font-size: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .hotel-info {
-        margin-left: 18px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-
-        .hotel-name {
-          font-size: 30px;
-          color: #111827;
-          font-weight: 700;
-          margin-bottom: 8px;
-        }
-
-        .hotel-address {
-          font-size: 22px;
-          color: #6B7280;
-          margin-bottom: 10px;
-        }
-
-        .hotel-meta {
-          display: flex;
-          gap: 14px;
-          margin-bottom: 10px;
-
-          .hotel-score {
-            color: #D97706;
-            font-size: 22px;
-            font-weight: 600;
-          }
-
-          .hotel-comment {
-            color: #6B7280;
-            font-size: 22px;
-          }
-        }
-
-        .hotel-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-bottom: 12px;
-
-          .hotel-tag {
-            font-size: 20px;
-            color: #1D4ED8;
-            background: #EFF6FF;
-            border-radius: 20px;
-            padding: 4px 12px;
-          }
-        }
-
-        .hotel-price {
-          margin-top: auto;
-          text-align: right;
-          color: #DC2626;
-          font-size: 32px;
-          font-weight: 700;
+          color: #ffffff;
+          font-weight: 900;
+          border-color: transparent;
+          box-shadow: 0 12px 20px rgba(0, 82, 217, 0.20);
         }
       }
     }
   }
-}
-.filters-row {
-  margin-bottom: 28px;
 
-  .filter-group {
+  .tags-row {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 14px;
-    padding: 8px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
 
-    &::-webkit-scrollbar { display: none; }
-
-    .filter-pill {
-      background: #F3F4F6;
-      color: #374151;
-      font-size: 24px;
-      padding: 10px 16px;
-      border-radius: 20px;
-      flex-shrink: 0;
+    .tag-pill {
+      background: rgba(0, 82, 217, 0.10);
+      color: #0B3AAE;
+      font-size: 22px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid rgba(0, 82, 217, 0.10);
 
       &.active {
         background: #0052D9;
         color: #ffffff;
+        border-color: transparent;
+        font-weight: 900;
+        box-shadow: 0 12px 20px rgba(0, 82, 217, 0.22);
+      }
+    }
+  }
+
+  .search-btn {
+    background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 900;
+    height: 86px;
+    line-height: 86px;
+    border-radius: 24px;
+    box-shadow: 0 16px 30px rgba(0, 82, 217, 0.24);
+    &::after { border: none; }
+  }
+
+  /* 下半屏内容区：解决大面积留白 */
+  .home-content {
+    padding: 8px 16px 24px;
+  }
+
+  .section {
+    background: #ffffff;
+    border-radius: 26px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(17, 24, 39, 0.04);
+  }
+
+  .section-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+
+    .section-title-text {
+      font-size: 28px;
+      color: #0F172A;
+      font-weight: 900;
+    }
+
+    .section-title-sub {
+      font-size: 22px;
+      color: #64748B;
+      font-weight: 600;
+    }
+  }
+
+  .quick-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    .quick-item {
+      flex: 1;
+      background: #F8FAFF;
+      border-radius: 22px;
+      padding: 16px 10px;
+      border: 1px solid rgba(17, 24, 39, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+
+      .quick-icon { font-size: 34px; }
+      .quick-text { font-size: 22px; color: #0F172A; font-weight: 800; }
+    }
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .chip {
+      background: #F3F4F6;
+      color: #334155;
+      font-size: 22px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      border: 1px solid rgba(17, 24, 39, 0.06);
+    }
+  }
+
+  .rec-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    .rec-card {
+      background: linear-gradient(135deg, rgba(0, 82, 217, 0.10) 0%, rgba(46, 144, 250, 0.06) 100%);
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid rgba(0, 82, 217, 0.10);
+      position: relative;
+
+      .rec-card-title {
+        font-size: 26px;
+        color: #0F172A;
+        font-weight: 900;
+        display: block;
+      }
+
+      .rec-card-sub {
+        margin-top: 6px;
+        font-size: 22px;
+        color: #64748B;
         font-weight: 600;
+        display: block;
+      }
+
+      .rec-card-tag {
+        margin-top: 10px;
+        display: inline-block;
+        font-size: 20px;
+        font-weight: 900;
+        color: #0B3AAE;
+        background: rgba(255,255,255,0.75);
+        border-radius: 999px;
+        padding: 6px 10px;
+        border: 1px solid rgba(17, 24, 39, 0.06);
       }
     }
   }

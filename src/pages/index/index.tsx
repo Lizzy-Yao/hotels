@@ -5,15 +5,15 @@ import Calendar from '../../components/Calendar'
 import CityPicker from '../../components/CityPicker'
 import './index.scss'
 
-/** 把 Date 转成 YYYY-MM-DD */
+/** 日期格式化：YYYY-MM-DD */
 const formatDate = (date: Date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
-/** 用于顶部日期展示：03月01日 */
+/** 页面展示：03月01日 */
 const formatDateShow = (dateStr: string) => {
   const parts = (dateStr || '').split('-')
   if (parts.length < 3) return dateStr
@@ -28,7 +28,12 @@ const calcNights = (checkIn: string, checkOut: string) => {
   return nights > 0 ? nights : 1
 }
 
+type PriceFilter = '0' | '0-300' | '300-600' | '600+'
+
 export default function Index () {
+  // 顶部安全区兜底：自定义导航时必须做，否则会贴到状态栏
+  const { statusBarHeight = 24 } = Taro.getSystemInfoSync()
+
   const today = new Date()
   const tomorrow = new Date(today)
   tomorrow.setDate(today.getDate() + 1)
@@ -38,47 +43,58 @@ export default function Index () {
   const [checkInDate, setCheckInDate] = useState(formatDate(today))
   const [checkOutDate, setCheckOutDate] = useState(formatDate(tomorrow))
 
-  // 快捷标签（可多选）
+  // 快捷标签
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
-  // 基础筛选：星级/价格（满足“筛选条件(酒店星级或价格等)”要求）
-  const [starFilter, setStarFilter] = useState<number | 0>(0) // 0=不限，3/4/5=指定星级
-  const [priceFilter, setPriceFilter] = useState<'0' | '0-300' | '300-600' | '600+'>('0')
+  // 基础筛选：星级/价格（传给列表页）
+  const [starFilter, setStarFilter] = useState<number | 0>(0)
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>('0')
 
-  // 弹窗控制
+  // 弹窗
   const [showCalendar, setShowCalendar] = useState(false)
   const [showCityPicker, setShowCityPicker] = useState(false)
 
-  // 跳转 loading（避免重复点击）
+  // 跳转防连点
   const [navigating, setNavigating] = useState(false)
 
   const nights = useMemo(() => calcNights(checkInDate, checkOutDate), [checkInDate, checkOutDate])
 
+  // Banner 用远程图，避免本地资源路径不一致导致白屏
   const banners = [
-    // 远程占位 Banner：避免你本地 assets 路径不一致导致白屏
     'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80&auto=format&fit=crop'
   ]
 
   const hotTags = ['免费停车场', '近地铁', '免费洗衣服务', '亲子酒店', '豪华型']
-
+  const hotCities = ['上海', '北京', '广州', '深圳', '杭州', '青岛']
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
   }
 
-  /** 首页查询：按要求跳转到列表页展示结果:contentReference[oaicite:3]{index=3} */
-  const handleGoList = async () => {
+  /** 统一跳转到酒店列表页：把条件拼到 query 里 */
+  const goHotelList = async (override?: Partial<{
+    city: string
+    keyword: string
+    tags: string[]
+    star: number
+    price: PriceFilter
+  }>) => {
     if (navigating) return
 
-    // 统一把 tags 序列化传递（列表页再 JSON.parse）
+    const city = override?.city ?? location
+    const kw = override?.keyword ?? keyword
+    const tags = override?.tags ?? selectedTags
+    const star = override?.star ?? starFilter
+    const price = override?.price ?? priceFilter
+
     const qs = [
-      `city=${encodeURIComponent(location)}`,
-      `keyword=${encodeURIComponent(keyword)}`,
+      `city=${encodeURIComponent(city)}`,
+      `keyword=${encodeURIComponent(kw)}`,
       `checkInDate=${encodeURIComponent(checkInDate)}`,
       `checkOutDate=${encodeURIComponent(checkOutDate)}`,
-      `tags=${encodeURIComponent(JSON.stringify(selectedTags || []))}`,
-      `star=${encodeURIComponent(String(starFilter))}`,
-      `price=${encodeURIComponent(priceFilter)}`
+      `tags=${encodeURIComponent(JSON.stringify(tags || []))}`,
+      `star=${encodeURIComponent(String(star || 0))}`,
+      `price=${encodeURIComponent(price || '0')}`
     ].join('&')
 
     setNavigating(true)
@@ -89,31 +105,36 @@ export default function Index () {
     }
   }
 
-  /** Banner 点击：优先跳详情；如果你还没做详情页，就先提示 */
-  const handleBannerClick = () => {
-    // 你如果已经有详情页，可改成：Taro.navigateTo({ url: `/pages/hotel-detail/index?hotelId=xxx` })
-    Taro.showToast({ title: '可在此跳转酒店详情页（你完成详情页后再接入）', icon: 'none' })
-  }
-
   return (
-    <View className='home-page'>
-      {/* 1. 顶部 Banner（点击可跳详情） */}
-      <Swiper className='banner-swiper' indicatorDots indicatorActiveColor='#fff' autoplay circular>
-        {banners.map((url, index) => (
-          <SwiperItem key={index}>
-            <Image src={url} className='banner-img' mode='aspectFill' onClick={handleBannerClick} />
-            <View className='banner-mask' />
-          </SwiperItem>
-        ))}
-      </Swiper>
+    <View className='home-page' style={{ '--status-bar-height': `${statusBarHeight}px` } as any}>
+      {/* 自定义导航安全区（避免贴顶） */}
+      <View className='safe-top' />
 
-      {/* 2. 悬浮搜索卡片 */}
+      {/* 顶部 Banner */}
+      <View className='banner-wrap'>
+        <Swiper className='banner-swiper' indicatorDots indicatorActiveColor='#fff' autoplay circular>
+          {banners.map((url, idx) => (
+            <SwiperItem key={idx}>
+              <Image src={url} className='banner-img' mode='aspectFill' />
+              <View className='banner-mask' />
+            </SwiperItem>
+          ))}
+        </Swiper>
+
+        {/* Banner 上方标题（替代系统“首页”字样） */}
+        <View className='banner-title'>
+          <Text className='banner-title-main'>酒店预订</Text>
+          <Text className='banner-title-sub'>更近携程风格 · 更清晰层级</Text>
+        </View>
+      </View>
+
+      {/* 悬浮搜索卡片 */}
       <View className='search-card'>
-        {/* 位置与关键词 */}
+        {/* 城市 + 关键词 */}
         <View className='card-row location-row'>
           <View className='location-box' onClick={() => setShowCityPicker(true)}>
             <Text className='city-name'>{location}</Text>
-            <Text className='location-icon'>📍 我的位置</Text>
+            <Text className='location-icon'>📍</Text>
           </View>
           <View className='divider' />
           <Input
@@ -125,7 +146,7 @@ export default function Index () {
           />
         </View>
 
-        {/* 入住/离店日期 */}
+        {/* 日期 */}
         <View className='card-row date-row' onClick={() => setShowCalendar(true)}>
           <View className='date-block'>
             <Text className='date-label'>入住</Text>
@@ -138,7 +159,7 @@ export default function Index () {
           </View>
         </View>
 
-        {/* 星级/价格筛选（首页核心查询区域的一部分） */}
+        {/* 星级/价格（更像“快捷筛选”） */}
         <View className='filters-row'>
           <View className='filter-group'>
             <Text className={`filter-pill ${starFilter === 0 ? 'active' : ''}`} onClick={() => setStarFilter(0)}>不限星级</Text>
@@ -155,7 +176,7 @@ export default function Index () {
           </View>
         </View>
 
-        {/* 快捷标签 */}
+        {/* 标签 */}
         <View className='tags-row'>
           {hotTags.map(tag => (
             <Text
@@ -168,10 +189,63 @@ export default function Index () {
           ))}
         </View>
 
-        {/* 查询按钮：跳转列表页 */}
-        <Button className='search-btn' onClick={handleGoList} loading={navigating} disabled={navigating}>
+        {/* 查询按钮 */}
+        <Button className='search-btn' onClick={() => goHotelList()} loading={navigating} disabled={navigating}>
           {navigating ? '正在跳转...' : '查找酒店'}
         </Button>
+      </View>
+
+      {/* 下面不留白：内容区填充 */}
+      <View className='home-content'>
+        {/* 热门目的地 */}
+        <View className='section'>
+          <View className='section-title'>
+            <Text className='section-title-text'>热门目的地</Text>
+            <Text className='section-title-sub'>选择城市直接搜</Text>
+          </View>
+
+          <View className='chip-row'>
+            {hotCities.map(c => (
+              <Text key={c} className='chip' onClick={() => goHotelList({ city: c })}>
+                {c}
+              </Text>
+            ))}
+          </View>
+        </View>
+
+        {/* 精选推荐（填充下半屏，避免空白） */}
+        <View className='section'>
+          <View className='section-title'>
+            <Text className='section-title-text'>精选推荐</Text>
+            <Text className='section-title-sub'>更像携程的推荐区</Text>
+          </View>
+
+          <View className='rec-list'>
+            <View className='rec-card' onClick={() => goHotelList({ tags: ['近地铁'], price: '300-600' })}>
+              <Text className='rec-card-title'>地铁口优选</Text>
+              <Text className='rec-card-sub'>通勤方便 · 评分优先</Text>
+              <Text className='rec-card-tag'>近地铁</Text>
+            </View>
+
+            <View className='rec-card' onClick={() => goHotelList({ tags: ['亲子酒店'], star: 4 })}>
+              <Text className='rec-card-title'>亲子出游</Text>
+              <Text className='rec-card-sub'>设施齐全 · 4星起</Text>
+              <Text className='rec-card-tag'>亲子酒店</Text>
+            </View>
+
+            <View className='rec-card' onClick={() => goHotelList({ tags: ['免费停车场'], price: '0-300' })}>
+              <Text className='rec-card-title'>自驾友好</Text>
+              <Text className='rec-card-sub'>停车方便 · 性价比</Text>
+              <Text className='rec-card-tag'>免费停车场</Text>
+            </View>
+
+            <View className='rec-card' onClick={() => goHotelList({ tags: ['豪华型'], star: 5, price: '600+' })}>
+              <Text className='rec-card-title'>高端精选</Text>
+              <Text className='rec-card-sub'>5星 · ¥600+</Text>
+              <Text className='rec-card-tag'>豪华型</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* 日历弹窗 */}
@@ -185,7 +259,7 @@ export default function Index () {
         }}
       />
 
-      {/* 城市选择器弹窗 */}
+      {/* 城市选择弹窗 */}
       <CityPicker
         visible={showCityPicker}
         currentCity={location}
