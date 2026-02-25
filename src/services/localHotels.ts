@@ -180,7 +180,7 @@ export async function listAdminHotels(params?: {
   pageSize?: number;
 }) {
   try {
-    const response = await request('/api/v1/admin/hotels', {
+    const response = await request('/api/v1/hotels', {
       method: 'GET',
       params: {
         status: params?.status,
