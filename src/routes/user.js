@@ -48,7 +48,7 @@ router.post("/hotels/search", async (req, res) => {
 
     const cityExists = await prisma.hotel.count({
       where: {
-        status: "APPROVED",
+        status: "PUBLISHED",
         address: { contains: body.city },
       },
     });
@@ -65,7 +65,7 @@ router.post("/hotels/search", async (req, res) => {
     const tags = (body.tags || []).map((tag) => tag.trim()).filter(Boolean);
 
     const where = {
-      status: "APPROVED",
+      status: "PUBLISHED",
       address: { contains: body.city },
       ...(keyword
         ? {
