@@ -145,6 +145,7 @@ router.post("/hotels/search", async (req, res) => {
         minPrice: Math.floor(minPriceCents),
         score: Number(hotel.starRating.toFixed(1)),
         commentCount: hotel._count.auditLogs,
+        starRating: hotel.starRating,
       };
     });
 
