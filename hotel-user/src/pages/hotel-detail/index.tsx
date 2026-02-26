@@ -23,10 +23,9 @@ const formatDate = (dateStr?: string | null) => {
   return `${y}-${m}-${d}`
 }
 
-const formatPriceCents = (price?: number, currency = 'CNY') => {
+const formatPriceYuan = (price?: number, currency = 'CNY') => {
   if (typeof price !== 'number' || Number.isNaN(price)) return '--'
-  const yuan = price / 100
-  const value = Number.isInteger(yuan) ? `${yuan}` : yuan.toFixed(2)
+  const value = Number.isInteger(price) ? `${price}` : price.toFixed(2)
   return currency === 'CNY' ? `¥${value}` : `${value} ${currency}`
 }
 
@@ -83,8 +82,38 @@ export default function HotelDetailPage () {
 
   const priceText = useMemo(() => {
     if (!hotel) return '--'
-    const min = formatPriceCents(hotel.minPriceCents, hotel.currency)
-    const max = formatPriceCents(hotel.maxPriceCents, hotel.currency)
+    const h = hotel as PublicHotelDetail & {
+      minPrice?: number
+      maxPrice?: number
+      minPriceYuan?: number
+      maxPriceYuan?: number
+    }
+
+    let minPrice =
+      typeof h.minPriceCents === 'number' ? h.minPriceCents
+        : typeof h.minPrice === 'number' ? h.minPrice
+          : typeof h.minPriceYuan === 'number' ? h.minPriceYuan
+            : undefined
+
+    let maxPrice =
+      typeof h.maxPriceCents === 'number' ? h.maxPriceCents
+        : typeof h.maxPrice === 'number' ? h.maxPrice
+          : typeof h.maxPriceYuan === 'number' ? h.maxPriceYuan
+            : undefined
+
+    if ((minPrice === undefined || maxPrice === undefined) && Array.isArray(hotel.roomTypes) && hotel.roomTypes.length > 0) {
+      const roomPrices = hotel.roomTypes
+        .map(room => room.basePriceCents)
+        .filter((p): p is number => typeof p === 'number' && !Number.isNaN(p))
+
+      if (roomPrices.length > 0) {
+        if (minPrice === undefined) minPrice = Math.min(...roomPrices)
+        if (maxPrice === undefined) maxPrice = Math.max(...roomPrices)
+      }
+    }
+
+    const min = formatPriceYuan(minPrice, hotel.currency)
+    const max = formatPriceYuan(maxPrice, hotel.currency)
     return min === max ? min : `${min} - ${max}`
   }, [hotel])
 
@@ -135,7 +164,7 @@ export default function HotelDetailPage () {
                 <View key={room.id} className='item'>
                   <View className='item-top'>
                     <Text className='item-title'>{room.name}</Text>
-                    <Text className='item-price'>{formatPriceCents(room.basePriceCents, room.currency)} / 晚</Text>
+                    <Text className='item-price'>{formatPriceYuan(room.basePriceCents, room.currency)} / 晚</Text>
                   </View>
                   {/* <Text className='item-desc'>{room.bedType} · {room.capacity}人 · {room.areaSqm}m2</Text> */}
                 </View>
@@ -164,7 +193,7 @@ export default function HotelDetailPage () {
                     <Text className='discount-tag'>{discount.isActive ? '生效中' : '未生效'}</Text>
                   </View>
                   <Text className='item-desc'>{discount.description || '暂无活动说明'}</Text>
-                  <Text className='item-desc'>时间：{formatDate(discount.startDate)} - {formatDate(discount.endDate)}</Text>
+                  {/* <Text className='item-desc'>时间：{formatDate(discount.startDate)} - {formatDate(discount.endDate)}</Text> */}
                 </View>
               )) : <Text className='empty'>暂无优惠活动</Text>}
             </View>
