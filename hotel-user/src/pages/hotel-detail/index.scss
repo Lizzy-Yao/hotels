@@ -1,0 +1,269 @@
+.hotel-detail-page {
+  min-height: 100vh;
+  background: #F5F7FA;
+  padding-bottom: env(safe-area-inset-bottom);
+
+  /* 顶部 Hero：更像携程的蓝色渐变 */
+  .hero {
+    position: relative;
+    padding: 0 24px 22px;
+    background: linear-gradient(135deg, #0B3AAE 0%, #0E57CC 45%, #2E90FA 100%);
+    border-bottom-left-radius: 34px;
+    border-bottom-right-radius: 34px;
+    box-shadow: 0 16px 34px rgba(14, 87, 204, 0.24);
+    overflow: hidden;
+
+    /* 轻纹理/高光层，增强质感（不影响性能） */
+    &::after {
+      content: '';
+      position: absolute;
+      top: -120px;
+      right: -120px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), rgba(255,255,255,0));
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+
+    /* 顶部安全区：用 statusBarHeight 兜底 + 再留 10px 呼吸感 */
+    .safe-top {
+      height: calc(var(--status-bar-height, 24px) + 10px);
+    }
+
+    .nav-row {
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .back,
+      .placeholder {
+        width: 66px;
+        height: 66px;
+      }
+
+      .back {
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 36px;
+        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.18);
+
+        &:active {
+          transform: scale(0.98);
+          opacity: 0.92;
+        }
+      }
+
+      .title {
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+      }
+    }
+
+    /* 标题信息卡：更“玻璃卡片” + 更饱满的间距 */
+    .hero-card {
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 26px;
+      padding: 26px 24px;
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+
+      .hero-main {
+        color: #ffffff;
+        font-size: 38px;
+        font-weight: 900;
+        line-height: 1.2;
+        display: block;
+      }
+
+      .hero-sub {
+        margin-top: 10px;
+        color: rgba(255, 255, 255, 0.90);
+        font-size: 24px;
+        display: block;
+      }
+
+      .hero-star {
+        margin-top: 14px;
+        color: #FFE08A;
+        font-size: 24px;
+        font-weight: 800;
+        display: inline-block;
+        background: rgba(3, 14, 38, 0.22);
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+    }
+  }
+
+  /* 内容区：让卡片不贴 Hero，形成“分层” */
+  .content {
+    padding: 18px 24px 34px;
+    margin-top: -10px; /* 轻微上提，做出层次 */
+  }
+
+  .card,
+  .error-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(17, 24, 39, 0.04);
+  }
+
+  /* 标题加左侧强调条，更像 App 分组标题 */
+  .card-title {
+    font-size: 28px;
+    color: #0F172A;
+    font-weight: 900;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #0052D9 0%, #2E90FA 100%);
+      flex-shrink: 0;
+    }
+  }
+
+  .line {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #EEF2F7;
+
+    &:last-child { border-bottom: none; }
+
+    .k {
+      color: #64748B;
+      font-size: 24px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .v {
+      color: #0F172A;
+      font-size: 24px;
+      text-align: right;
+      font-weight: 700;
+
+      &.highlight {
+        color: #C2410C;
+        font-weight: 900;
+      }
+    }
+  }
+
+  .item {
+    padding: 16px 0;
+    border-bottom: 1px dashed #E2E8F0;
+
+    &:last-child { border-bottom: none; }
+
+    .item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .item-title {
+      font-size: 26px;
+      color: #0F172A;
+      font-weight: 900;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-price {
+      color: #DC2626;
+      font-size: 24px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .item-desc {
+      font-size: 22px;
+      color: #64748B;
+      display: block;
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+  }
+
+  .type-tag,
+  .discount-tag {
+    font-size: 20px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    flex-shrink: 0;
+    font-weight: 800;
+    border: 1px solid rgba(17, 24, 39, 0.06);
+  }
+
+  .type-tag {
+    background: rgba(0, 82, 217, 0.10);
+    color: #0B3AAE;
+  }
+
+  .discount-tag {
+    background: rgba(245, 158, 11, 0.16);
+    color: #B45309;
+  }
+
+  .empty {
+    color: #94A3B8;
+    font-size: 22px;
+    display: block;
+    padding: 8px 0 4px;
+    font-weight: 600;
+  }
+
+  .error-text {
+    font-size: 24px;
+    color: #475569;
+    text-align: center;
+    display: block;
+    font-weight: 700;
+  }
+
+  .retry-btn {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #0052D9 0%, #003AA6 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    height: 78px;
+    line-height: 78px;
+    font-size: 26px;
+    font-weight: 900;
+    box-shadow: 0 14px 28px rgba(0, 82, 217, 0.22);
+
+    &::after { border: none; }
+
+    &:active {
+      transform: scale(0.99);
+      opacity: 0.95;
+    }
+  }
+}

@@ -1,0 +1,83 @@
+.calendar-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  .calendar-mask-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s;
+  }
+
+  .calendar-container {
+    position: relative;
+    background: #fff;
+    border-radius: 32px 32px 0 0;
+    height: 75vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+
+    .calendar-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 32px;
+      position: relative;
+      .title { font-size: 32px; font-weight: bold; color: #333; }
+      .close { position: absolute; right: 32px; font-size: 40px; color: #999; padding: 10px; }
+    }
+
+    .week-days {
+      display: flex;
+      padding: 0 20px 20px;
+      .week-day { flex: 1; text-align: center; font-size: 24px; color: #999; }
+    }
+
+    .calendar-body {
+      flex: 1;
+      padding: 0 20px;
+      
+      .month-section {
+        margin-bottom: 40px;
+        .month-title { font-size: 32px; font-weight: bold; margin: 20px 0 30px; text-align: center; color: #111; }
+        .days-grid {
+          display: flex;
+          flex-wrap: wrap;
+          
+          .day {
+            width: 14.28%;
+            height: 96px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            position: relative;
+
+            .day-num { font-size: 32px; font-weight: 500; color: #333; z-index: 2; }
+            .day-tag { font-size: 18px; color: #fff; margin-top: 4px; z-index: 2; }
+
+            &.disabled { .day-num { color: #ccc; } }
+            &.selected {
+              background: #0052D9; // 品牌蓝
+              .day-num { color: #fff; font-weight: bold; }
+            }
+            &.between {
+              background: rgba(0, 82, 217, 0.1);
+              border-radius: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
